@@ -1,0 +1,1 @@
+web: gunicorn connect_liberia_backend.wsgi:application
