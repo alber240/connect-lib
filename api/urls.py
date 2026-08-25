@@ -18,7 +18,7 @@ urlpatterns = [
     path('dashboard/institutions/<int:pk>/', dashboard_views.dashboard_institution_detail),
     path('dashboard/suggestions/', dashboard_views.dashboard_suggestions),
     path('dashboard/suggestions/<int:pk>/action/', dashboard_views.dashboard_suggestion_action),
-    path('dashboard/suggestions/<int:pk>/delete/', dashboard_views.dashboard_suggestion_delete),  # <-- Add this
+    path('dashboard/suggestions/<int:pk>/delete/', dashboard_views.dashboard_suggestion_delete),
     path('dashboard/news/', dashboard_views.dashboard_news),
     path('dashboard/news/<int:pk>/', dashboard_views.dashboard_news_detail),
 ]
