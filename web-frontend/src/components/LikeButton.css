@@ -1,0 +1,51 @@
+/* ============= LIKE BUTTON ============= */
+.like-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px 16px;
+    border-radius: 30px;
+    transition: all 0.3s;
+    font-size: 1rem;
+    background: #f0f0f0;
+}
+
+.like-button:hover {
+    background: #e0e0e0;
+    transform: scale(1.05);
+}
+
+.like-button.liked {
+    background: #fef2f2;
+}
+
+.like-button .like-icon {
+    font-size: 1.4rem;
+    transition: transform 0.3s;
+}
+
+.like-button.liked .like-icon {
+    animation: heartPop 0.3s ease;
+}
+
+.like-button .like-count {
+    font-weight: 600;
+    color: #333;
+    min-width: 20px;
+    text-align: center;
+}
+
+.like-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+@keyframes heartPop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.4); }
+    100% { transform: scale(1); }
+}

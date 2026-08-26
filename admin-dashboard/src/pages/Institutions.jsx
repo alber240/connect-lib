@@ -18,6 +18,7 @@ const Institutions = () => {
   const [counties, setCounties] = useState([]);
   const [imagePreview, setImagePreview] = useState(null);
   const [videoPreview, setVideoPreview] = useState('');
+  const [galleryPreviews, setGalleryPreviews] = useState([]);
   const fileInputRef = useRef(null);
 
   // Production API URL
@@ -40,6 +41,7 @@ const Institutions = () => {
     longitude: '',
     cover_image: null,
     video_url: '',
+    gallery_images: [],
     is_verified: false,
     is_featured: false,
   });
@@ -64,7 +66,7 @@ const Institutions = () => {
     loadData();
   }, []);
 
-  // ============ LOAD DATA - FIXED ============
+  // ============ LOAD DATA ============
   const loadData = async () => {
     setLoading(true);
     try {
@@ -108,6 +110,24 @@ const Institutions = () => {
     }
   };
 
+  const handleGalleryChange = (e) => {
+    const files = Array.from(e.target.files);
+    setFormData({ ...formData, gallery_images: files });
+    
+    // Preview images
+    const previews = [];
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        previews.push(event.target.result);
+        if (previews.length === files.length) {
+          setGalleryPreviews(previews);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
   const handleVideoChange = (e) => {
     const url = e.target.value;
     setFormData({ ...formData, video_url: url });
@@ -143,11 +163,13 @@ const Institutions = () => {
       longitude: '',
       cover_image: null,
       video_url: '',
+      gallery_images: [],
       is_verified: false,
       is_featured: false,
     });
     setImagePreview(null);
     setVideoPreview('');
+    setGalleryPreviews([]);
     setEditingId(null);
     setShowForm(false);
     if (fileInputRef.current) {
@@ -162,7 +184,11 @@ const Institutions = () => {
     try {
       const data = new FormData();
       Object.keys(formData).forEach(key => {
-        if (formData[key] !== null && formData[key] !== '') {
+        if (key === 'gallery_images') {
+          formData.gallery_images.forEach(file => {
+            data.append('gallery_images', file);
+          });
+        } else if (formData[key] !== null && formData[key] !== '') {
           data.append(key, formData[key]);
         }
       });
@@ -204,12 +230,13 @@ const Institutions = () => {
       longitude: institution.longitude || '',
       cover_image: null,
       video_url: institution.video_url || '',
+      gallery_images: [],
       is_verified: institution.is_verified || false,
       is_featured: institution.is_featured || false,
     });
-    // FIX: Use production URL for image preview
     setImagePreview(institution.cover_image ? `${API_BASE_URL}${institution.cover_image}` : null);
     setVideoPreview('');
+    setGalleryPreviews([]);
     setShowForm(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -347,6 +374,7 @@ const Institutions = () => {
 
             <form onSubmit={handleSubmit}>
               <div className="form-grid">
+                {/* Basic Information */}
                 <div className="form-group full-width">
                   <label>Institution Name <span className="required">*</span></label>
                   <input
@@ -412,6 +440,7 @@ const Institutions = () => {
                   />
                 </div>
 
+                {/* Contact Information */}
                 <div className="form-group">
                   <label>Phone Number</label>
                   <input
@@ -456,6 +485,7 @@ const Institutions = () => {
                   />
                 </div>
 
+                {/* Description */}
                 <div className="form-group full-width">
                   <label>Description</label>
                   <textarea
@@ -489,6 +519,7 @@ const Institutions = () => {
                   />
                 </div>
 
+                {/* Media Uploads */}
                 <div className="form-group">
                   <label>Cover Image</label>
                   <input
@@ -511,6 +542,36 @@ const Institutions = () => {
                         }}
                       >
                         Remove
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <div className="form-group full-width">
+                  <label>Gallery Images (Multiple)</label>
+                  <input
+                    type="file"
+                    name="gallery_images"
+                    onChange={handleGalleryChange}
+                    accept="image/*"
+                    multiple
+                  />
+                  {galleryPreviews.length > 0 && (
+                    <div className="gallery-preview-grid">
+                      {galleryPreviews.map((preview, index) => (
+                        <div key={index} className="gallery-preview-item">
+                          <img src={preview} alt={`Gallery ${index + 1}`} />
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        className="remove-gallery"
+                        onClick={() => {
+                          setGalleryPreviews([]);
+                          setFormData({ ...formData, gallery_images: [] });
+                        }}
+                      >
+                        Clear All
                       </button>
                     </div>
                   )}
@@ -547,6 +608,7 @@ const Institutions = () => {
                   )}
                 </div>
 
+                {/* Location */}
                 <div className="form-group">
                   <label>Latitude</label>
                   <input
@@ -569,6 +631,7 @@ const Institutions = () => {
                   />
                 </div>
 
+                {/* Status */}
                 <div className="form-group full-width checkbox-group">
                   <label className="checkbox-label">
                     <input

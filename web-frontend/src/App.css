@@ -720,3 +720,196 @@
     gap: 6px;
   }
 }
+
+/* ============= FEATURED SECTION ============= */
+.featured-section,
+.trending-section {
+    background: white;
+    padding: 20px 25px;
+    border-radius: var(--radius);
+    margin-bottom: 25px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--gray-100);
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.section-header h2 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--gray-800);
+    margin: 0;
+}
+
+.section-badge {
+    font-size: 0.7rem;
+    padding: 2px 12px;
+    background: var(--primary);
+    color: white;
+    border-radius: 20px;
+}
+
+.featured-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.featured-card {
+    background: var(--gray-50);
+    border-radius: var(--radius);
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    transition: var(--transition);
+    border: 1px solid var(--gray-100);
+}
+
+.featured-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+}
+
+.featured-image {
+    height: 120px;
+    overflow: hidden;
+    background: var(--gray-200);
+    position: relative;
+}
+
+.featured-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.featured-no-image {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    font-size: 2.5rem;
+    color: var(--gray-300);
+}
+
+.featured-verified {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 1rem;
+}
+
+.featured-info {
+    padding: 12px 14px;
+}
+
+.featured-info h3 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin: 0 0 4px;
+    color: var(--gray-800);
+}
+
+.featured-info p {
+    font-size: 0.8rem;
+    color: var(--gray-500);
+    margin: 0 0 4px;
+}
+
+.featured-location {
+    font-size: 0.75rem;
+    color: var(--gray-400);
+}
+
+.featured-loading,
+.featured-empty {
+    text-align: center;
+    padding: 20px;
+    color: var(--gray-400);
+}
+
+.section-footer {
+    margin-top: 12px;
+    text-align: right;
+}
+
+.view-more {
+    color: var(--primary);
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.view-more:hover {
+    text-decoration: underline;
+}
+
+/* ============= TRENDING SECTION ============= */
+.trending-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.trending-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 10px 14px;
+    background: var(--gray-50);
+    border-radius: var(--radius);
+    text-decoration: none;
+    color: inherit;
+    transition: var(--transition);
+}
+
+.trending-item:hover {
+    background: var(--gray-100);
+}
+
+.trending-number {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--primary);
+    min-width: 28px;
+}
+
+.trending-info {
+    flex: 1;
+}
+
+.trending-info h4 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin: 0;
+    color: var(--gray-800);
+}
+
+.trending-info p {
+    font-size: 0.8rem;
+    color: var(--gray-500);
+    margin: 0;
+}
+
+.trending-verified {
+    font-size: 0.9rem;
+}
+
+.trending-empty {
+    text-align: center;
+    padding: 20px;
+    color: var(--gray-400);
+}
+
+/* ============= FEATURED BADGE SMALL ============= */
+.featured-badge-small {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    font-size: 1.2rem;
+}

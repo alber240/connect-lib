@@ -8,14 +8,19 @@ import Suggest from './pages/Suggest';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import NewsPage from './pages/NewsPage';
+import WelcomeSection from './components/WelcomeSection';
+import DidYouKnow from './components/DidYouKnow';
 
 function HomePage() {
   const { user, logout } = useUserAuth();
   const [institutions, setInstitutions] = useState([]);
   const [counties, setCounties] = useState([]);
   const [news, setNews] = useState([]);
+  const [featured, setFeatured] = useState([]);
+  const [trending, setTrending] = useState([]);
   const [loading, setLoading] = useState(true);
   const [newsLoading, setNewsLoading] = useState(true);
+  const [featuredLoading, setFeaturedLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedCounty, setSelectedCounty] = useState('');
@@ -82,8 +87,33 @@ function HomePage() {
     }
   };
 
+  const loadFeatured = async () => {
+    setFeaturedLoading(true);
+    try {
+      const response = await fetch('https://connect-lib.onrender.com/api/institutions/?is_featured=true');
+      const data = await response.json();
+      setFeatured(data.results || data || []);
+    } catch (err) {
+      console.error('Error loading featured:', err);
+    } finally {
+      setFeaturedLoading(false);
+    }
+  };
+
+  const loadTrending = async () => {
+    try {
+      const response = await fetch('https://connect-lib.onrender.com/api/institutions/?limit=5');
+      const data = await response.json();
+      setTrending(data.results || data || []);
+    } catch (err) {
+      console.error('Error loading trending:', err);
+    }
+  };
+
   useEffect(() => {
     loadData();
+    loadFeatured();
+    loadTrending();
   }, [loadData]);
 
   useEffect(() => {
@@ -103,6 +133,14 @@ function HomePage() {
 
   // Base URL for images from Render
   const IMAGE_BASE_URL = 'https://connect-lib.onrender.com';
+
+  // Recent searches from localStorage
+  const saveSearch = (term) => {
+    if (!term) return;
+    const searches = JSON.parse(localStorage.getItem('recentSearches') || '[]');
+    const updated = [term, ...searches.filter(s => s !== term)].slice(0, 5);
+    localStorage.setItem('recentSearches', JSON.stringify(updated));
+  };
 
   return (
     <>
@@ -126,6 +164,72 @@ function HomePage() {
         <p>Find information about institutions across Liberia</p>
         <p className="institution-count">{institutions.length} institutions found</p>
       </header>
+
+      {/* Welcome Section */}
+      <WelcomeSection />
+
+      {/* Did You Know? */}
+      <DidYouKnow />
+
+      {/* Featured Institutions */}
+      <div className="featured-section">
+        <div className="section-header">
+          <h2>⭐ Featured Institutions</h2>
+          <span className="section-badge">Verified</span>
+        </div>
+        {featuredLoading ? (
+          <div className="featured-loading">Loading featured...</div>
+        ) : featured.length === 0 ? (
+          <div className="featured-empty">No featured institutions yet</div>
+        ) : (
+          <div className="featured-grid">
+            {featured.slice(0, 4).map(inst => (
+              <Link to={`/institution/${inst.id}`} key={inst.id} className="featured-card">
+                <div className="featured-image">
+                  {inst.cover_image ? (
+                    <img src={`${IMAGE_BASE_URL}${inst.cover_image}`} alt={inst.name} />
+                  ) : (
+                    <div className="featured-no-image">📷</div>
+                  )}
+                  {inst.is_verified && <span className="featured-verified">✅</span>}
+                </div>
+                <div className="featured-info">
+                  <h3>{inst.name}</h3>
+                  <p>{getCategoryLabel(inst.category)}</p>
+                  <span className="featured-location">📍 {inst.county_name || inst.county}</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+        <div className="section-footer">
+          <Link to="/search" className="view-more">View All Institutions →</Link>
+        </div>
+      </div>
+
+      {/* Trending Section */}
+      <div className="trending-section">
+        <div className="section-header">
+          <h2>🔥 Trending Now</h2>
+          <span className="section-badge">Popular</span>
+        </div>
+        <div className="trending-list">
+          {trending.length === 0 ? (
+            <div className="trending-empty">No trending institutions yet</div>
+          ) : (
+            trending.slice(0, 5).map((inst, index) => (
+              <Link to={`/institution/${inst.id}`} key={inst.id} className="trending-item">
+                <span className="trending-number">{index + 1}</span>
+                <div className="trending-info">
+                  <h4>{inst.name}</h4>
+                  <p>{inst.county_name || inst.county}</p>
+                </div>
+                {inst.is_verified && <span className="trending-verified">✅</span>}
+              </Link>
+            ))
+          )}
+        </div>
+      </div>
 
       {/* News Section */}
       <div className="news-section">
@@ -166,13 +270,24 @@ function HomePage() {
         )}
       </div>
 
+      {/* Search Section */}
       <div className="search-section">
         <div className="search-bar">
           <input
             type="text"
             placeholder="Search for a place..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              if (e.target.value.length > 2) {
+                saveSearch(e.target.value);
+              }
+            }}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter' && searchTerm.length > 2) {
+                saveSearch(searchTerm);
+              }
+            }}
           />
         </div>
 
@@ -205,6 +320,7 @@ function HomePage() {
         </div>
       </div>
 
+      {/* Results */}
       <div className="results">
         {error && (
           <div className="error-message">
@@ -234,6 +350,7 @@ function HomePage() {
                         }}
                       />
                       {inst.video_url && <span className="video-badge">🎬</span>}
+                      {inst.is_featured && <span className="featured-badge-small">⭐</span>}
                     </div>
                   )}
                   <div className="card-body">
@@ -271,9 +388,9 @@ function App() {
       <Router>
         <div className="app">
           <Routes>
-            <Route path="/news" element={<NewsPage />} />
             <Route path="/" element={<HomePage />} />
             <Route path="/institution/:id" element={<InstitutionDetail />} />
+            <Route path="/news" element={<NewsPage />} />
             <Route path="/suggest" element={<Suggest />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />

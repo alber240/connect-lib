@@ -1,6 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getInstitution } from '../services/api';
+import ImageGallery from '../components/ImageGallery';
+import LikeButton from '../components/LikeButton';
+import Rating from '../components/Rating';
+import CommentSection from '../components/CommentSection';
 import './InstitutionDetail.css';
 
 const InstitutionDetail = () => {
@@ -10,6 +14,7 @@ const InstitutionDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showFullDescription, setShowFullDescription] = useState(false);
+  const [galleryImages, setGalleryImages] = useState([]);
 
   // Base URL for images from Render
   const IMAGE_BASE_URL = 'https://connect-lib.onrender.com';
@@ -22,6 +27,20 @@ const InstitutionDetail = () => {
       const data = await getInstitution(id);
       if (data) {
         setInstitution(data);
+        // Build gallery from cover image and any additional images
+        const images = [];
+        if (data.cover_image) {
+          images.push(`${IMAGE_BASE_URL}${data.cover_image}`);
+        }
+        // Add any additional images if available
+        if (data.media_files) {
+          data.media_files.forEach(media => {
+            if (media.media_type === 'image' && media.file) {
+              images.push(`${IMAGE_BASE_URL}${media.file}`);
+            }
+          });
+        }
+        setGalleryImages(images);
       } else {
         setError('Institution not found');
       }
@@ -31,7 +50,7 @@ const InstitutionDetail = () => {
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [id, IMAGE_BASE_URL]);
 
   // Update useEffect with the correct dependency
   useEffect(() => {
@@ -98,16 +117,12 @@ const InstitutionDetail = () => {
         ← Back
       </button>
 
-      {/* Cover Image */}
+      {/* Cover Image / Gallery */}
       <div className="detail-cover">
-        {institution.cover_image ? (
-          <img 
-            src={`${IMAGE_BASE_URL}${institution.cover_image}`} 
-            alt={institution.name}
-            onError={(e) => {
-              e.target.style.display = 'none';
-              e.target.parentElement.innerHTML = '<div class="no-image-large">📷</div>';
-            }}
+        {galleryImages.length > 0 ? (
+          <ImageGallery 
+            images={galleryImages} 
+            title={institution.name}
           />
         ) : (
           <div className="no-image-large">{getCategoryEmoji(institution.category)}</div>
@@ -130,6 +145,36 @@ const InstitutionDetail = () => {
           {institution.district && (
             <span className="detail-district">📌 {institution.district}</span>
           )}
+        </div>
+
+        {/* Trust Section */}
+        <div className="detail-section trust-section">
+          <h3>🔒 About This Data</h3>
+          <div className="trust-info">
+            <div className="trust-item">
+              <span className="trust-icon">{institution.is_verified ? '✅' : '⏳'}</span>
+              <div>
+                <strong>{institution.is_verified ? 'Verified' : 'Unverified'}</strong>
+                <p>{institution.is_verified ? 'This institution\'s information has been verified by the Connect Liberia team.' : 'This information has not yet been verified. Please confirm directly.'}</p>
+              </div>
+            </div>
+            <div className="trust-item">
+              <span className="trust-icon">📅</span>
+              <div>
+                <strong>Last Updated</strong>
+                <p>{new Date(institution.updated_at).toLocaleDateString()}</p>
+              </div>
+            </div>
+            {institution.source && (
+              <div className="trust-item">
+                <span className="trust-icon">🔗</span>
+                <div>
+                  <strong>Source</strong>
+                  <p>{institution.source}</p>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Video Section */}
@@ -224,6 +269,36 @@ const InstitutionDetail = () => {
               </div>
             )}
           </div>
+        </div>
+
+        {/* Engagement Section - Rating */}
+        <div className="detail-section engagement-section">
+          <div className="engagement-header">
+            <h3>❤️ Rate & Review</h3>
+            <Rating 
+              institutionId={institution.id}
+              averageRating={institution.average_rating || 0}
+              totalRatings={institution.total_ratings || 0}
+              userRating={institution.user_rating || 0}
+            />
+          </div>
+        </div>
+
+        {/* Engagement Section - Like Button */}
+        <div className="detail-section engagement-section">
+          <div className="engagement-header">
+            <LikeButton 
+              type="institution" 
+              id={institution.id}
+              initialCount={institution.likes || 0}
+              initialLiked={institution.user_liked || false}
+            />
+          </div>
+        </div>
+
+        {/* Engagement Section - Comments */}
+        <div className="detail-section">
+          <CommentSection type="institution" id={institution.id} />
         </div>
 
         {/* Map Section */}

@@ -1,0 +1,122 @@
+.welcome-section {
+    margin-bottom: 25px;
+}
+
+.welcome-banner {
+    background: linear-gradient(135deg, #1a5276, #2e86c1);
+    border-radius: 12px;
+    padding: 30px 35px;
+    color: white;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.welcome-banner::before {
+    content: '🇱🇷';
+    position: absolute;
+    right: 20px;
+    bottom: 20px;
+    font-size: 4rem;
+    opacity: 0.1;
+}
+
+.welcome-banner h2 {
+    font-size: 1.8rem;
+    margin: 0 0 8px;
+}
+
+.welcome-banner p {
+    font-size: 1rem;
+    opacity: 0.9;
+    margin: 0 0 15px;
+}
+
+.welcome-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.welcome-actions .btn-primary {
+    background: white;
+    color: #1a5276;
+    padding: 10px 24px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.welcome-actions .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.welcome-actions .btn-secondary {
+    background: rgba(255,255,255,0.2);
+    color: white;
+    padding: 10px 24px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s;
+    border: 1px solid rgba(255,255,255,0.3);
+}
+
+.welcome-actions .btn-secondary:hover {
+    background: rgba(255,255,255,0.3);
+}
+
+.welcome-tip {
+    margin-top: 15px;
+    font-size: 0.9rem;
+    opacity: 0.8;
+    font-style: italic;
+}
+
+.recent-searches {
+    margin-top: 12px;
+}
+
+.recent-searches p {
+    font-size: 0.85rem;
+    margin: 0 0 6px;
+}
+
+.search-tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.search-tag {
+    background: rgba(255,255,255,0.15);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.search-tag:hover {
+    background: rgba(255,255,255,0.25);
+}
+
+@media (max-width: 600px) {
+    .welcome-banner {
+        padding: 20px;
+    }
+    
+    .welcome-banner h2 {
+        font-size: 1.3rem;
+    }
+    
+    .welcome-actions {
+        flex-direction: column;
+    }
+    
+    .welcome-actions a {
+        text-align: center;
+    }
+}
