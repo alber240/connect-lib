@@ -187,7 +187,7 @@ function HomePage() {
               <Link to={`/institution/${inst.id}`} key={inst.id} className="featured-card">
                 <div className="featured-image">
                   {inst.cover_image ? (
-                    <img src={`${IMAGE_BASE_URL}${inst.cover_image}`} alt={inst.name} />
+                    <img src={inst.cover_image} alt={inst.name} />
                   ) : (
                     <div className="featured-no-image">📷</div>
                   )}
@@ -342,7 +342,7 @@ function HomePage() {
                   {inst.cover_image && (
                     <div className="card-image">
                       <img 
-                        src={`${IMAGE_BASE_URL}${inst.cover_image}`} 
+                        src={inst.cover_image}  
                         alt={inst.name}
                         onError={(e) => {
                           e.target.style.display = 'none';

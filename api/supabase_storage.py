@@ -1,0 +1,96 @@
+import os
+import requests
+from django.core.files.storage import Storage
+from django.core.files.base import ContentFile
+from django.utils.deconstruct import deconstructible
+from supabase import create_client, Client
+from datetime import datetime
+import base64
+
+@deconstructible
+class SupabaseStorage(Storage):
+    def __init__(self, bucket='institutions'):
+        self.bucket = bucket
+        self.supabase_url = os.environ.get('SUPABASE_URL', 'https://pkuzqojtxxkkmfmmapzm.supabase.co')
+        self.supabase_key = os.environ.get('SUPABASE_ANON_KEY', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrdXpxb2p0eHhra21mbW1hcHptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyNjcxOTQsImV4cCI6MjEwMjg0MzE5NH0.9xfDu3dzxhJGRoP_qSawBpFlN5nsemezUQEKmzaPUnc')
+        self.bucket_url = f"{self.supabase_url}/storage/v1/object/public/{self.bucket}"
+
+    def _get_client(self):
+        return create_client(self.supabase_url, self.supabase_key)
+
+    def _upload_to_supabase(self, name, content):
+        """Upload file to Supabase Storage"""
+        client = self._get_client()
+        
+        if hasattr(content, 'read'):
+            content.seek(0)
+            file_content = content.read()
+        else:
+            file_content = content
+        
+        try:
+            response = client.storage.from_(self.bucket).upload(
+                name,
+                file_content,
+                {'content-type': self._get_content_type(name)}
+            )
+            return self.get_available_name(name)
+        except Exception as e:
+            print(f"Supabase upload error: {e}")
+            raise
+
+    def _get_content_type(self, name):
+        """Get content type based on file extension"""
+        ext = name.split('.')[-1].lower()
+        content_types = {
+            'jpg': 'image/jpeg',
+            'jpeg': 'image/jpeg',
+            'png': 'image/png',
+            'gif': 'image/gif',
+            'webp': 'image/webp',
+            'svg': 'image/svg+xml',
+            'pdf': 'application/pdf',
+            'mp4': 'video/mp4',
+            'webm': 'video/webm',
+        }
+        return content_types.get(ext, 'application/octet-stream')
+
+    def _save(self, name, content):
+        """Save file to Supabase Storage"""
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        name_parts = name.split('.')
+        ext = name_parts[-1] if len(name_parts) > 1 else ''
+        name_without_ext = '.'.join(name_parts[:-1])
+        
+        clean_name = ''.join(c for c in name_without_ext if c.isalnum() or c in '._-')
+        unique_name = f"{timestamp}_{clean_name}.{ext}" if ext else f"{timestamp}_{clean_name}"
+        
+        return self._upload_to_supabase(unique_name, content)
+
+    def _open(self, name, mode='rb'):
+        """Open file from Supabase Storage"""
+        url = f"{self.bucket_url}/{name}"
+        response = requests.get(url)
+        if response.status_code == 200:
+            return ContentFile(response.content)
+        raise FileNotFoundError(f"File {name} not found in Supabase")
+
+    def exists(self, name):
+        """Check if file exists in Supabase"""
+        url = f"{self.bucket_url}/{name}"
+        response = requests.head(url)
+        return response.status_code == 200
+
+    def delete(self, name):
+        """Delete file from Supabase"""
+        try:
+            client = self._get_client()
+            client.storage.from_(self.bucket).remove([name])
+            return True
+        except Exception as e:
+            print(f"Delete error: {e}")
+            return False
+
+    def url(self, name):
+        """Get public URL for file"""
+        return f"{self.bucket_url}/{name}"

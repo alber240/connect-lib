@@ -1,15 +1,11 @@
 import axios from 'axios';
 
-
 // Replace with your Render backend URL
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://connect-lib.onrender.com/api';
 
-
 const api = axios.create({
   baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  // Remove default Content-Type header - let axios handle it
 });
 
 // Add token to requests if it exists
@@ -19,6 +15,7 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    // Don't set Content-Type globally - let it be set per request
     return config;
   },
   (error) => Promise.reject(error)
@@ -96,13 +93,32 @@ export const getInstitution = async (id) => {
 };
 
 export const createInstitution = async (data) => {
-  const response = await api.post('/dashboard/institutions/', data);
-  return response.data;
+  try {
+    // If data is FormData, let axios set the Content-Type automatically
+    const response = await api.post('/dashboard/institutions/', data, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error creating institution:', error);
+    throw error;
+  }
 };
 
 export const updateInstitution = async (id, data) => {
-  const response = await api.put(`/dashboard/institutions/${id}/`, data);
-  return response.data;
+  try {
+    const response = await api.put(`/dashboard/institutions/${id}/`, data, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error updating institution:', error);
+    throw error;
+  }
 };
 
 export const deleteInstitution = async (id) => {
@@ -134,9 +150,7 @@ export const rejectSuggestion = async (id, notes = '') => {
 
 export const deleteSuggestion = async (id) => {
   try {
-    // If you have a dedicated delete endpoint, use it
-    // Otherwise, we'll use the suggestions endpoint with delete
-    const response = await api.delete(`/suggestions/${id}/`);
+    const response = await api.delete(`/dashboard/suggestions/${id}/delete/`);
     return response.data;
   } catch (error) {
     console.error('Error deleting suggestion:', error);
@@ -151,25 +165,24 @@ export const getNews = async () => {
 };
 
 export const createNews = async (data) => {
-  const response = await api.post('/dashboard/news/', data);
+  let config = {};
+  if (data instanceof FormData) {
+    config.headers = { 'Content-Type': 'multipart/form-data' };
+  }
+  const response = await api.post('/dashboard/news/', data, config);
   return response.data;
 };
 
 export const updateNews = async (id, data) => {
   try {
-    // If data is FormData, use multipart
-    // Otherwise send as JSON
     let config = {};
-    let requestData = data;
-    
     if (data instanceof FormData) {
       config.headers = { 'Content-Type': 'multipart/form-data' };
     } else {
       config.headers = { 'Content-Type': 'application/json' };
-      requestData = JSON.stringify(data);
+      data = JSON.stringify(data);
     }
-    
-    const response = await api.put(`/dashboard/news/${id}/`, requestData, config);
+    const response = await api.put(`/dashboard/news/${id}/`, data, config);
     return response.data;
   } catch (error) {
     console.error('Error updating news:', error);
@@ -180,3 +193,5 @@ export const updateNews = async (id, data) => {
 export const deleteNews = async (id) => {
   await api.delete(`/dashboard/news/${id}/`);
 };
+
+export default api;

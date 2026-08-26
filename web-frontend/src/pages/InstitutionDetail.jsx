@@ -16,43 +16,47 @@ const InstitutionDetail = () => {
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [galleryImages, setGalleryImages] = useState([]);
 
-  // Base URL for images from Render
+  // Base URL for images from Render - only used for media_files that are relative paths
   const IMAGE_BASE_URL = 'https://connect-lib.onrender.com';
 
-  // Wrap loadInstitution with useCallback to fix the useEffect warning
   const loadInstitution = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await getInstitution(id);
-      if (data) {
-        setInstitution(data);
-        // Build gallery from cover image and any additional images
-        const images = [];
-        if (data.cover_image) {
-          images.push(`${IMAGE_BASE_URL}${data.cover_image}`);
-        }
-        // Add any additional images if available
-        if (data.media_files) {
-          data.media_files.forEach(media => {
-            if (media.media_type === 'image' && media.file) {
+  setLoading(true);
+  setError(null);
+  try {
+    const data = await getInstitution(id);
+    if (data) {
+      setInstitution(data);
+      // Build gallery from cover image and any additional images
+      const images = [];
+      if (data.cover_image) {
+        // cover_image is already a full URL from the API - use it directly
+        images.push(data.cover_image);
+      }
+      // Add any additional images if available
+      if (data.media_files) {
+        data.media_files.forEach(media => {
+          if (media.media_type === 'image' && media.file) {
+            // Check if it's already a full URL
+            if (media.file.startsWith('http')) {
+              images.push(media.file);
+            } else {
               images.push(`${IMAGE_BASE_URL}${media.file}`);
             }
-          });
-        }
-        setGalleryImages(images);
-      } else {
-        setError('Institution not found');
+          }
+        });
       }
-    } catch (err) {
-      console.error('Error loading institution:', err);
-      setError('Failed to load institution details');
-    } finally {
-      setLoading(false);
+      setGalleryImages(images);
+    } else {
+      setError('Institution not found');
     }
-  }, [id, IMAGE_BASE_URL]);
+  } catch (err) {
+    console.error('Error loading institution:', err);
+    setError('Failed to load institution details');
+  } finally {
+    setLoading(false);
+  }
+}, [id]);
 
-  // Update useEffect with the correct dependency
   useEffect(() => {
     loadInstitution();
     window.scrollTo(0, 0);

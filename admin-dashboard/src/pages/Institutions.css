@@ -663,3 +663,13 @@ tr.featured-row:hover {
     justify-content: center;
   }
 }
+.source-link {
+    color: #2e86c1;
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.source-link:hover {
+    text-decoration: underline;
+}

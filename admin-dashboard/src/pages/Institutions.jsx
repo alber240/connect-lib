@@ -42,6 +42,7 @@ const Institutions = () => {
     cover_image: null,
     video_url: '',
     gallery_images: [],
+    source: '',
     is_verified: false,
     is_featured: false,
   });
@@ -66,7 +67,6 @@ const Institutions = () => {
     loadData();
   }, []);
 
-  // ============ LOAD DATA ============
   const loadData = async () => {
     setLoading(true);
     try {
@@ -75,7 +75,6 @@ const Institutions = () => {
       console.log('Institutions data:', instData);
       setInstitutions(instData || []);
       
-      // Fetch counties from production API
       try {
         const response = await fetch(`${API_BASE_URL}/api/counties/`);
         const countyData = await response.json();
@@ -114,7 +113,6 @@ const Institutions = () => {
     const files = Array.from(e.target.files);
     setFormData({ ...formData, gallery_images: files });
     
-    // Preview images
     const previews = [];
     files.forEach(file => {
       const reader = new FileReader();
@@ -164,6 +162,7 @@ const Institutions = () => {
       cover_image: null,
       video_url: '',
       gallery_images: [],
+      source: '',
       is_verified: false,
       is_featured: false,
     });
@@ -182,34 +181,71 @@ const Institutions = () => {
     setLoading(true);
 
     try {
-      const data = new FormData();
-      Object.keys(formData).forEach(key => {
-        if (key === 'gallery_images') {
-          formData.gallery_images.forEach(file => {
-            data.append('gallery_images', file);
-          });
-        } else if (formData[key] !== null && formData[key] !== '') {
-          data.append(key, formData[key]);
+        const data = new FormData();
+        
+        // Required fields
+        data.append('name', formData.name || '');
+        data.append('category', formData.category || 'other');
+        data.append('county', formData.county || '');
+        
+        // Optional fields - only append if they have value
+        if (formData.district) data.append('district', formData.district);
+        if (formData.address) data.append('address', formData.address);
+        if (formData.phone) data.append('phone', formData.phone);
+        if (formData.phone2) data.append('phone2', formData.phone2);
+        if (formData.email) data.append('email', formData.email);
+        if (formData.website) data.append('website', formData.website);
+        if (formData.description) data.append('description', formData.description);
+        if (formData.services) data.append('services', formData.services);
+        if (formData.opening_hours) data.append('opening_hours', formData.opening_hours);
+        if (formData.latitude) data.append('latitude', formData.latitude);
+        if (formData.longitude) data.append('longitude', formData.longitude);
+        if (formData.video_url) data.append('video_url', formData.video_url);
+        if (formData.source) data.append('source', formData.source);
+        
+        // IMPORTANT: Handle cover image properly
+        // Get the file directly from the input
+        const fileInput = document.querySelector('input[name="cover_image"]');
+        if (fileInput && fileInput.files && fileInput.files.length > 0) {
+            data.append('cover_image', fileInput.files[0]);
         }
-      });
+        
+        // Handle gallery images
+        const galleryInput = document.querySelector('input[name="gallery_images"]');
+        if (galleryInput && galleryInput.files && galleryInput.files.length > 0) {
+            for (let i = 0; i < galleryInput.files.length; i++) {
+                data.append('gallery_images', galleryInput.files[i]);
+            }
+        }
+        
+        // Boolean fields
+        data.append('is_verified', formData.is_verified ? 'true' : 'false');
+        data.append('is_featured', formData.is_featured ? 'true' : 'false');
 
-      if (editingId) {
-        await updateInstitution(editingId, data);
-        alert('Institution updated successfully!');
-      } else {
-        await createInstitution(data);
-        alert('Institution created successfully!');
-      }
+        console.log('Sending data:', Object.fromEntries(data));
 
-      await loadData();
-      resetForm();
+        if (editingId) {
+            await updateInstitution(editingId, data);
+            alert('Institution updated successfully!');
+        } else {
+            await createInstitution(data);
+            alert('Institution created successfully!');
+        }
+
+        await loadData();
+        resetForm();
     } catch (error) {
-      console.error('Error saving institution:', error);
-      alert('Error saving institution. Please check your inputs and try again.');
+        console.error('Error saving institution:', error);
+        if (error.response && error.response.data) {
+            console.error('Server error details:', error.response.data);
+            alert(`Error: ${JSON.stringify(error.response.data)}`);
+        } else {
+            alert('Error saving institution. Please check your inputs and try again.');
+        }
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
-  };
+};
 
   const handleEdit = (institution) => {
     setEditingId(institution.id);
@@ -231,6 +267,7 @@ const Institutions = () => {
       cover_image: null,
       video_url: institution.video_url || '',
       gallery_images: [],
+      source: institution.source || '',
       is_verified: institution.is_verified || false,
       is_featured: institution.is_featured || false,
     });
@@ -264,7 +301,6 @@ const Institutions = () => {
     return found ? found.name : countyId;
   };
 
-  // Filter institutions
   const filteredInstitutions = institutions.filter(inst => {
     const matchesSearch = inst.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           (inst.address && inst.address.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -284,7 +320,6 @@ const Institutions = () => {
 
   return (
     <div className="institutions-page">
-      {/* Header */}
       <div className="page-header">
         <div>
           <h1>🏛️ Institutions Management</h1>
@@ -295,7 +330,6 @@ const Institutions = () => {
         </button>
       </div>
 
-      {/* Stats Bar */}
       <div className="stats-bar">
         <div className="stat-item">
           <span className="stat-number">{institutions.length}</span>
@@ -319,7 +353,6 @@ const Institutions = () => {
         </div>
       </div>
 
-      {/* Filters */}
       <div className="filters-bar">
         <div className="search-box">
           <input
@@ -361,7 +394,6 @@ const Institutions = () => {
         </button>
       </div>
 
-      {/* Form Modal */}
       {showForm && (
         <div className="form-modal" onClick={(e) => {
           if (e.target === e.currentTarget) resetForm();
@@ -372,9 +404,8 @@ const Institutions = () => {
               <button onClick={resetForm} className="close-btn" title="Close">✕</button>
             </div>
 
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} encType="multipart/form-data">
               <div className="form-grid">
-                {/* Basic Information */}
                 <div className="form-group full-width">
                   <label>Institution Name <span className="required">*</span></label>
                   <input
@@ -440,7 +471,6 @@ const Institutions = () => {
                   />
                 </div>
 
-                {/* Contact Information */}
                 <div className="form-group">
                   <label>Phone Number</label>
                   <input
@@ -485,7 +515,17 @@ const Institutions = () => {
                   />
                 </div>
 
-                {/* Description */}
+                <div className="form-group">
+                  <label>Source</label>
+                  <input
+                    type="url"
+                    name="source"
+                    value={formData.source}
+                    onChange={handleInputChange}
+                    placeholder="https://source-of-information.com"
+                  />
+                </div>
+
                 <div className="form-group full-width">
                   <label>Description</label>
                   <textarea
@@ -519,7 +559,6 @@ const Institutions = () => {
                   />
                 </div>
 
-                {/* Media Uploads */}
                 <div className="form-group">
                   <label>Cover Image</label>
                   <input
@@ -608,7 +647,6 @@ const Institutions = () => {
                   )}
                 </div>
 
-                {/* Location */}
                 <div className="form-group">
                   <label>Latitude</label>
                   <input
@@ -631,7 +669,6 @@ const Institutions = () => {
                   />
                 </div>
 
-                {/* Status */}
                 <div className="form-group full-width checkbox-group">
                   <label className="checkbox-label">
                     <input
@@ -667,7 +704,6 @@ const Institutions = () => {
         </div>
       )}
 
-      {/* Institutions Table */}
       <div className="institutions-list">
         <div className="table-header">
           <span className="result-count">{filteredInstitutions.length} institutions found</span>
@@ -696,6 +732,7 @@ const Institutions = () => {
                   <th>County</th>
                   <th>Contact</th>
                   <th>Status</th>
+                  <th>Source</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -729,6 +766,13 @@ const Institutions = () => {
                         <span className="badge verified">✅ Verified</span>
                       ) : (
                         <span className="badge unverified">⏳ Unverified</span>
+                      )}
+                    </td>
+                    <td>
+                      {inst.source && (
+                        <a href={inst.source} target="_blank" rel="noopener noreferrer" className="source-link">
+                          🔗 Link
+                        </a>
                       )}
                     </td>
                     <td>
