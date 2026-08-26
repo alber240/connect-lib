@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getInstitution } from '../services/api';
 import './InstitutionDetail.css';
@@ -11,12 +11,11 @@ const InstitutionDetail = () => {
   const [error, setError] = useState(null);
   const [showFullDescription, setShowFullDescription] = useState(false);
 
-  useEffect(() => {
-    loadInstitution();
-    window.scrollTo(0, 0);
-  }, [id]);
+  // Base URL for images from Render
+  const IMAGE_BASE_URL = 'https://connect-lib.onrender.com';
 
-  const loadInstitution = async () => {
+  // Wrap loadInstitution with useCallback to fix the useEffect warning
+  const loadInstitution = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -32,7 +31,13 @@ const InstitutionDetail = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  // Update useEffect with the correct dependency
+  useEffect(() => {
+    loadInstitution();
+    window.scrollTo(0, 0);
+  }, [loadInstitution]);
 
   const getCategoryLabel = (category) => {
     const labels = {
@@ -97,7 +102,7 @@ const InstitutionDetail = () => {
       <div className="detail-cover">
         {institution.cover_image ? (
           <img 
-            src={`http://127.0.0.1:8000${institution.cover_image}`} 
+            src={`${IMAGE_BASE_URL}${institution.cover_image}`} 
             alt={institution.name}
             onError={(e) => {
               e.target.style.display = 'none';

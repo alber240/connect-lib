@@ -3,13 +3,10 @@ import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import './App.css';
 import { getInstitutions, getCounties, getLatestNews } from './services/api';
 import { UserAuthProvider, useUserAuth } from './context/UserAuthContext';
-import LoadingSpinner from './components/LoadingSpinner';
 import InstitutionDetail from './pages/InstitutionDetail';
 import Suggest from './pages/Suggest';
 import Login from './pages/Login';
 import Register from './pages/Register';
-
-// ... rest of the code with LoadingSpinner replacing the old loading text
 
 function HomePage() {
   const { user, logout } = useUserAuth();
@@ -103,6 +100,9 @@ function HomePage() {
     return emojis[category] || '📰';
   };
 
+  // Base URL for images from Render
+  const IMAGE_BASE_URL = 'https://connect-lib.onrender.com';
+
   return (
     <>
       <header className="header">
@@ -143,7 +143,7 @@ function HomePage() {
                 {item.featured_image && (
                   <div className="news-image">
                     <img 
-                      src={`http://127.0.0.1:8000${item.featured_image}`} 
+                      src={`${IMAGE_BASE_URL}${item.featured_image}`} 
                       alt={item.title}
                       onError={(e) => e.target.style.display = 'none'}
                     />
@@ -225,7 +225,7 @@ function HomePage() {
                   {inst.cover_image && (
                     <div className="card-image">
                       <img 
-                        src={`http://127.0.0.1:8000${inst.cover_image}`} 
+                        src={`${IMAGE_BASE_URL}${inst.cover_image}`} 
                         alt={inst.name}
                         onError={(e) => {
                           e.target.style.display = 'none';

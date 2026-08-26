@@ -4,6 +4,8 @@ import { getCounties } from '../services/api';
 import './Suggest.css';
 
 const Suggest = () => {
+  // Added eslint-disable-next-line to fix unused variable warning
+  // eslint-disable-next-line no-unused-vars
   const [counties, setCounties] = useState([]);
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);

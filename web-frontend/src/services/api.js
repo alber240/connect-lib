@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://127.0.0.1:8000/api';
+// Replace with your Render backend URL
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://connect-lib.onrender.com/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -8,6 +9,8 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+// ============ INSTITUTIONS ============
 
 // Get all institutions (with optional search/filters)
 export const getInstitutions = async (params = {}) => {
@@ -34,6 +37,8 @@ export const getInstitution = async (id) => {
   }
 };
 
+// ============ COUNTIES ============
+
 // Get all counties
 export const getCounties = async () => {
   try {
@@ -48,7 +53,7 @@ export const getCounties = async () => {
   }
 };
 
-// Add to existing api.js
+// ============ NEWS ============
 
 // Get all news
 export const getNews = async () => {
@@ -65,9 +70,9 @@ export const getNews = async () => {
 };
 
 // Get latest news (for homepage)
-export const getLatestNews = async (limit = 3) => {
+export const getLatestNews = async (limit = 4) => {
   try {
-    const response = await api.get('/news/?limit=' + limit);
+    const response = await api.get(`/news/?limit=${limit}`);
     if (response.data && response.data.results) {
       return response.data.results;
     }
@@ -78,12 +83,12 @@ export const getLatestNews = async (limit = 3) => {
   }
 };
 
-// Add these to api.js
+// ============ USER AUTHENTICATION ============
 
 // User Registration
 export const register = async (username, email, password, password2) => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/register/`, {
+    const response = await api.post('/register/', {
       username,
       email,
       password,
@@ -98,7 +103,7 @@ export const register = async (username, email, password, password2) => {
 // User Login (uses JWT)
 export const userLogin = async (username, password) => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/token/`, {
+    const response = await api.post('/token/', {
       username,
       password,
     });
@@ -114,19 +119,34 @@ export const userLogin = async (username, password) => {
   }
 };
 
+// User Logout
 export const userLogout = () => {
   localStorage.removeItem('user_token');
   localStorage.removeItem('user_refresh');
   localStorage.removeItem('user_username');
 };
 
+// Check if user is logged in
 export const isUserLoggedIn = () => {
   return !!localStorage.getItem('user_token');
 };
 
+// Get current logged in user
 export const getCurrentUser = () => {
   return localStorage.getItem('user_username');
 };
 
-export default api;
+// ============ SUGGESTIONS ============
 
+// Submit a suggestion
+export const submitSuggestion = async (suggestionData) => {
+  try {
+    const response = await api.post('/suggestions/', suggestionData);
+    return response.data;
+  } catch (error) {
+    console.error('Error submitting suggestion:', error);
+    throw error.response?.data || { error: 'Failed to submit suggestion' };
+  }
+};
+
+export default api;
