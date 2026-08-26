@@ -12,6 +12,9 @@ router.register(r'news', views.NewsViewSet)
 urlpatterns = [
     path('', include(router.urls)),
     
+    # Registration endpoint
+    path('register/', views.register, name='register'),
+    
     # Dashboard endpoints
     path('dashboard/stats/', dashboard_views.dashboard_stats),
     path('dashboard/institutions/', dashboard_views.dashboard_institutions),

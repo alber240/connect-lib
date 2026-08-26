@@ -7,6 +7,7 @@ import InstitutionDetail from './pages/InstitutionDetail';
 import Suggest from './pages/Suggest';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import NewsPage from './pages/NewsPage';
 
 function HomePage() {
   const { user, logout } = useUserAuth();
@@ -270,6 +271,7 @@ function App() {
       <Router>
         <div className="app">
           <Routes>
+            <Route path="/news" element={<NewsPage />} />
             <Route path="/" element={<HomePage />} />
             <Route path="/institution/:id" element={<InstitutionDetail />} />
             <Route path="/suggest" element={<Suggest />} />

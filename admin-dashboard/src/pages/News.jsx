@@ -15,6 +15,9 @@ const News = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const fileInputRef = useRef(null);
 
+  // Production API URL
+  const API_BASE_URL = 'https://connect-lib.onrender.com';
+
   const [formData, setFormData] = useState({
     title: '',
     content: '',
@@ -38,17 +41,34 @@ const News = () => {
     loadData();
   }, []);
 
+  // ============ LOAD DATA - FIXED ============
   const loadData = async () => {
     setLoading(true);
     try {
-      const [newsData, countyData, instData] = await Promise.all([
-        getNews(),
-        fetch('http://127.0.0.1:8000/api/counties/').then(r => r.json()),
-        fetch('http://127.0.0.1:8000/api/institutions/').then(r => r.json()),
-      ]);
+      console.log('Fetching news...');
+      const newsData = await getNews();
+      console.log('News data:', newsData);
       setNewsItems(newsData || []);
-      setCounties(countyData.results || countyData || []);
-      setInstitutions(instData.results || instData || []);
+      
+      // Fetch counties from production API
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/counties/`);
+        const countyData = await response.json();
+        console.log('Counties data:', countyData);
+        setCounties(countyData.results || countyData || []);
+      } catch (err) {
+        console.error('Error fetching counties:', err);
+      }
+
+      // Fetch institutions from production API
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/institutions/`);
+        const instData = await response.json();
+        console.log('Institutions data:', instData);
+        setInstitutions(instData.results || instData || []);
+      } catch (err) {
+        console.error('Error fetching institutions:', err);
+      }
     } catch (error) {
       console.error('Error loading data:', error);
       alert('Failed to load data. Please try again.');
@@ -136,7 +156,8 @@ const News = () => {
       video_url: item.video_url || '',
       is_published: item.is_published !== undefined ? item.is_published : true,
     });
-    setImagePreview(item.featured_image ? `http://127.0.0.1:8000${item.featured_image}` : null);
+    // FIX: Use production URL for image preview
+    setImagePreview(item.featured_image ? `${API_BASE_URL}${item.featured_image}` : null);
     setShowForm(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -155,17 +176,15 @@ const News = () => {
   };
 
   const togglePublish = async (id, currentStatus) => {
-  try {
-    // Send as JSON instead of FormData for simple field updates
-    const data = { is_published: !currentStatus };
-    await updateNews(id, data);
-    await loadData();
-  } catch (error) {
-    console.error('Error toggling publish status:', error);
-    alert('Error updating news status.');
-  }
-};
-
+    try {
+      const data = { is_published: !currentStatus };
+      await updateNews(id, data);
+      await loadData();
+    } catch (error) {
+      console.error('Error toggling publish status:', error);
+      alert('Error updating news status.');
+    }
+  };
 
   const getCategoryLabel = (category) => {
     const found = categories.find(c => c.value === category);
@@ -433,7 +452,7 @@ const News = () => {
                 <div className="news-image">
                   {item.featured_image ? (
                     <img
-                      src={`http://127.0.0.1:8000${item.featured_image}`}
+                      src={`${API_BASE_URL}${item.featured_image}`}
                       alt={item.title}
                       onError={(e) => {
                         e.target.style.display = 'none';

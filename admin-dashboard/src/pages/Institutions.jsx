@@ -20,6 +20,9 @@ const Institutions = () => {
   const [videoPreview, setVideoPreview] = useState('');
   const fileInputRef = useRef(null);
 
+  // Production API URL
+  const API_BASE_URL = 'https://connect-lib.onrender.com';
+
   const [formData, setFormData] = useState({
     name: '',
     category: 'other',
@@ -61,15 +64,24 @@ const Institutions = () => {
     loadData();
   }, []);
 
+  // ============ LOAD DATA - FIXED ============
   const loadData = async () => {
     setLoading(true);
     try {
-      const [instData, countyData] = await Promise.all([
-        getInstitutions(),
-        fetch('http://127.0.0.1:8000/api/counties/').then(r => r.json())
-      ]);
+      console.log('Fetching institutions...');
+      const instData = await getInstitutions();
+      console.log('Institutions data:', instData);
       setInstitutions(instData || []);
-      setCounties(countyData.results || countyData || []);
+      
+      // Fetch counties from production API
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/counties/`);
+        const countyData = await response.json();
+        console.log('Counties data:', countyData);
+        setCounties(countyData.results || countyData || []);
+      } catch (err) {
+        console.error('Error fetching counties:', err);
+      }
     } catch (error) {
       console.error('Error loading data:', error);
       alert('Failed to load data. Please check your connection.');
@@ -99,7 +111,6 @@ const Institutions = () => {
   const handleVideoChange = (e) => {
     const url = e.target.value;
     setFormData({ ...formData, video_url: url });
-    // Extract video ID for preview
     if (url.includes('youtube.com/watch?v=')) {
       const videoId = url.split('v=')[1]?.split('&')[0];
       setVideoPreview(`https://www.youtube.com/embed/${videoId}`);
@@ -157,12 +168,12 @@ const Institutions = () => {
       });
 
       if (editingId) {
-  await updateInstitution(editingId, data);
-  alert('Institution updated successfully!');
-} else {
-  await createInstitution(data);
-  alert('Institution created successfully!');
-}
+        await updateInstitution(editingId, data);
+        alert('Institution updated successfully!');
+      } else {
+        await createInstitution(data);
+        alert('Institution created successfully!');
+      }
 
       await loadData();
       resetForm();
@@ -196,7 +207,8 @@ const Institutions = () => {
       is_verified: institution.is_verified || false,
       is_featured: institution.is_featured || false,
     });
-    setImagePreview(institution.cover_image ? `http://127.0.0.1:8000${institution.cover_image}` : null);
+    // FIX: Use production URL for image preview
+    setImagePreview(institution.cover_image ? `${API_BASE_URL}${institution.cover_image}` : null);
     setVideoPreview('');
     setShowForm(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -335,7 +347,6 @@ const Institutions = () => {
 
             <form onSubmit={handleSubmit}>
               <div className="form-grid">
-                {/* Basic Information */}
                 <div className="form-group full-width">
                   <label>Institution Name <span className="required">*</span></label>
                   <input
@@ -401,7 +412,6 @@ const Institutions = () => {
                   />
                 </div>
 
-                {/* Contact Information */}
                 <div className="form-group">
                   <label>Phone Number</label>
                   <input
@@ -446,7 +456,6 @@ const Institutions = () => {
                   />
                 </div>
 
-                {/* Description */}
                 <div className="form-group full-width">
                   <label>Description</label>
                   <textarea
@@ -469,7 +478,6 @@ const Institutions = () => {
                   />
                 </div>
 
-                {/* Opening Hours */}
                 <div className="form-group">
                   <label>Opening Hours</label>
                   <input
@@ -481,7 +489,6 @@ const Institutions = () => {
                   />
                 </div>
 
-                {/* Media */}
                 <div className="form-group">
                   <label>Cover Image</label>
                   <input
@@ -540,7 +547,6 @@ const Institutions = () => {
                   )}
                 </div>
 
-                {/* Location */}
                 <div className="form-group">
                   <label>Latitude</label>
                   <input
@@ -563,7 +569,6 @@ const Institutions = () => {
                   />
                 </div>
 
-                {/* Status */}
                 <div className="form-group full-width checkbox-group">
                   <label className="checkbox-label">
                     <input
@@ -638,7 +643,7 @@ const Institutions = () => {
                       <div className="institution-name">
                         {inst.cover_image && (
                           <img
-                            src={`http://127.0.0.1:8000${inst.cover_image}`}
+                            src={`${API_BASE_URL}${inst.cover_image}`}
                             alt={inst.name}
                             className="thumbnail"
                             onError={(e) => e.target.style.display = 'none'}
