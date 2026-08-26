@@ -8,6 +8,7 @@ import Suggest from './pages/Suggest';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import NewsPage from './pages/NewsPage';
+import SearchPage from './pages/SearchPage';
 import WelcomeSection from './components/WelcomeSection';
 import DidYouKnow from './components/DidYouKnow';
 
@@ -131,7 +132,7 @@ function HomePage() {
     return emojis[category] || '📰';
   };
 
-  // Base URL for images from Render
+  // Base URL for images from Render - only used for news images that are relative paths
   const IMAGE_BASE_URL = 'https://connect-lib.onrender.com';
 
   // Recent searches from localStorage
@@ -248,7 +249,7 @@ function HomePage() {
                 {item.featured_image && (
                   <div className="news-image">
                     <img 
-                      src={`${IMAGE_BASE_URL}${item.featured_image}`} 
+                      src={item.featured_image} 
                       alt={item.title}
                       onError={(e) => e.target.style.display = 'none'}
                     />
@@ -283,7 +284,7 @@ function HomePage() {
                 saveSearch(e.target.value);
               }
             }}
-            onKeyPress={(e) => {
+            onKeyDown={(e) => {
               if (e.key === 'Enter' && searchTerm.length > 2) {
                 saveSearch(searchTerm);
               }
@@ -376,6 +377,8 @@ function HomePage() {
           <Link to="/suggest">💡 Suggest a Place</Link>
           <span>|</span>
           <Link to="/about">About</Link>
+          <span>|</span>
+          <Link to="/">🏠 Home</Link>
         </div>
       </footer>
     </>
@@ -391,6 +394,7 @@ function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/institution/:id" element={<InstitutionDetail />} />
             <Route path="/news" element={<NewsPage />} />
+            <Route path="/search" element={<SearchPage />} />
             <Route path="/suggest" element={<Suggest />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />

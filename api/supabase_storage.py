@@ -3,23 +3,33 @@ import requests
 from django.core.files.storage import Storage
 from django.core.files.base import ContentFile
 from django.utils.deconstruct import deconstructible
-from supabase import create_client, Client
 from datetime import datetime
-import base64
+
+# Try to import supabase, fallback if not installed
+try:
+    from supabase import create_client, Client
+except ImportError:
+    create_client = None
+    Client = None
 
 @deconstructible
 class SupabaseStorage(Storage):
     def __init__(self, bucket='institutions'):
         self.bucket = bucket
-        self.supabase_url = os.environ.get('SUPABASE_URL', 'https://pkuzqojtxxkkmfmmapzm.supabase.co')
-        self.supabase_key = os.environ.get('SUPABASE_ANON_KEY', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrdXpxb2p0eHhra21mbW1hcHptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyNjcxOTQsImV4cCI6MjEwMjg0MzE5NH0.9xfDu3dzxhJGRoP_qSawBpFlN5nsemezUQEKmzaPUnc')
-        self.bucket_url = f"{self.supabase_url}/storage/v1/object/public/{self.bucket}"
+        self.supabase_url = os.environ.get('SUPABASE_URL')
+        self.supabase_key = os.environ.get('SUPABASE_ANON_KEY')
+        self.bucket_url = f"{self.supabase_url}/storage/v1/object/public/{self.bucket}" if self.supabase_url else None
 
     def _get_client(self):
+        if create_client is None:
+            raise ImportError("supabase package is not installed")
         return create_client(self.supabase_url, self.supabase_key)
 
     def _upload_to_supabase(self, name, content):
         """Upload file to Supabase Storage"""
+        if not self.supabase_url or not self.supabase_key:
+            raise ValueError("Supabase credentials not configured")
+        
         client = self._get_client()
         
         if hasattr(content, 'read'):
@@ -93,4 +103,6 @@ class SupabaseStorage(Storage):
 
     def url(self, name):
         """Get public URL for file"""
+        if not self.bucket_url:
+            return name
         return f"{self.bucket_url}/{name}"
