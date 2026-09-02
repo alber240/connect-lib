@@ -51,12 +51,12 @@ class SupabaseStorage(Storage):
         else:
             file_content = content
         
+        # REMOVE ANY DUPLICATE BUCKET NAME FROM THE PATH
+        if name.startswith(f"{self.bucket}/"):
+            name = name[len(self.bucket) + 1:]
+        
         try:
-            # Ensure we don't have duplicate bucket names
-            if name.startswith(f"{self.bucket}/"):
-                name = name.replace(f"{self.bucket}/", "", 1)
-            
-            response = client.storage.from_(self.bucket).upload(
+            client.storage.from_(self.bucket).upload(
                 name,
                 file_content,
                 {'content-type': self._get_content_type(name)}
@@ -99,9 +99,12 @@ class SupabaseStorage(Storage):
             return False
 
     def url(self, name):
-        # Remove duplicate bucket name if it exists
+        # FINAL FIX: Remove ANY duplicate bucket name from the URL
         if name.startswith(f"{self.bucket}/"):
             name = name.replace(f"{self.bucket}/", "", 1)
         if name.startswith(f"{self.bucket}"):
-            name = name.replace(f"{self.bucket}/", "", 1)
+            name = name.replace(f"{self.bucket}", "", 1)
+        # Make sure we don't have double slashes
+        if name.startswith('/'):
+            name = name[1:]
         return f"{self.bucket_url}/{name}"
