@@ -159,6 +159,9 @@ CORS_ALLOWED_ORIGINS += [
     "http://localhost:3001",
     "http://127.0.0.1:3000",
     "http://127.0.0.1:3001",
+    "https://connect-liberia-admin.vercel.app",
+    "https://connect-lib-1.onrender.com",
+    "https://connect-liberia-website.onrender.com",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
