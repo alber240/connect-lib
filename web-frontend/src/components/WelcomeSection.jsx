@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';  // Add this import
 import { useUserAuth } from '../context/UserAuthContext';
 import './WelcomeSection.css';
 
@@ -7,7 +8,6 @@ const WelcomeSection = () => {
     const [recentSearches, setRecentSearches] = useState([]);
     const [randomTip, setRandomTip] = useState('');
 
-    // Tips array defined outside component so it doesn't change on re-render
     const tips = [
         "Did you know Liberia has 15 counties? Explore them all!",
         "Connect Liberia helps you find hospitals, schools, and more!",
@@ -18,12 +18,15 @@ const WelcomeSection = () => {
         "Connect Liberia is free and always will be!",
     ];
 
-    useEffect(() => {
+    const loadRecentSearches = useCallback(() => {
         const searches = JSON.parse(localStorage.getItem('recentSearches') || '[]');
         setRecentSearches(searches.slice(-5).reverse());
         setRandomTip(tips[Math.floor(Math.random() * tips.length)]);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [tips]);
+
+    useEffect(() => {
+        loadRecentSearches();
+    }, [loadRecentSearches]);
 
     if (!user) {
         return (
@@ -32,8 +35,8 @@ const WelcomeSection = () => {
                     <h2>🇱🇷 Welcome to Connect Liberia!</h2>
                     <p>Find information about institutions across Liberia</p>
                     <div className="welcome-actions">
-                        <a href="/register" className="btn-primary">Get Started</a>
-                        <a href="/login" className="btn-secondary">Login</a>
+                        <Link to="/register" className="btn-primary">Get Started</Link>
+                        <Link to="/login" className="btn-secondary">Login</Link>
                     </div>
                     <p className="welcome-tip">💡 {randomTip}</p>
                 </div>
@@ -47,8 +50,8 @@ const WelcomeSection = () => {
                 <h2>👋 Welcome back, {user.username || 'User'}!</h2>
                 <p>What would you like to do today?</p>
                 <div className="welcome-actions">
-                    <a href="/search" className="btn-primary">🔍 Search</a>
-                    <a href="/suggest" className="btn-secondary">💡 Suggest a Place</a>
+                    <Link to="/search" className="btn-primary">🔍 Search</Link>
+                    <Link to="/suggest" className="btn-secondary">💡 Suggest a Place</Link>
                 </div>
                 {recentSearches.length > 0 && (
                     <div className="recent-searches">
