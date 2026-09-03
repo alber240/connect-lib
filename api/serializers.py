@@ -1,5 +1,6 @@
 ﻿from rest_framework import serializers
 from .models import County, Institution, Suggestion, News, Comment, Rating, Media
+from django.utils import timezone
 
 class CountySerializer(serializers.ModelSerializer):
     institution_count = serializers.IntegerField(source='institutions.count', read_only=True)
@@ -71,3 +72,27 @@ class RatingSerializer(serializers.ModelSerializer):
         model = Rating
         fields = ['id', 'user', 'user_username', 'institution', 'rating', 'review', 'created_at', 'updated_at']
         read_only_fields = ['user', 'created_at', 'updated_at']
+        
+        
+class NewsSerializer(serializers.ModelSerializer):
+    is_expired = serializers.SerializerMethodField()
+    source_domain = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = News
+        fields = ['id', 'title', 'content', 'category', 'county', 'institution', 
+                  'source', 'source_url', 'source_domain', 'featured_image', 'video_url', 
+                  'is_published', 'is_expired', 'expires_at', 'created_at', 'updated_at']
+    
+    def get_is_expired(self, obj):
+        return obj.is_expired()
+    
+    def get_source_domain(self, obj):
+        if obj.source:
+            try:
+                from urllib.parse import urlparse
+                domain = urlparse(obj.source).netloc
+                return domain.replace('www.', '')
+            except:
+                return None
+        return None
