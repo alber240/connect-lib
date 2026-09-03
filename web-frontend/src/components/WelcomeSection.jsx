@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useUserAuth } from '../context/UserAuthContext';
 import './WelcomeSection.css';
 
 const WelcomeSection = () => {
     const { user } = useUserAuth();
+    const navigate = useNavigate();
     const [recentSearches, setRecentSearches] = useState([]);
     const [randomTip, setRandomTip] = useState('');
 
-    // Define tips outside the component or use useMemo
     const tips = [
         "Did you know Liberia has 15 counties? Explore them all!",
         "Connect Liberia helps you find hospitals, schools, and more!",
@@ -23,7 +23,11 @@ const WelcomeSection = () => {
         const searches = JSON.parse(localStorage.getItem('recentSearches') || '[]');
         setRecentSearches(searches.slice(-5).reverse());
         setRandomTip(tips[Math.floor(Math.random() * tips.length)]);
-    }, []); // ✅ Empty dependency array - runs only once
+    }, []);
+
+    const handleNavigation = (path) => {
+        navigate(path);
+    };
 
     if (!user) {
         return (
@@ -32,8 +36,18 @@ const WelcomeSection = () => {
                     <h2>🇱🇷 Welcome to Connect Liberia!</h2>
                     <p>Find information about institutions across Liberia</p>
                     <div className="welcome-actions">
-                        <Link to="/register" className="btn-primary">Get Started</Link>
-                        <Link to="/login" className="btn-secondary">Login</Link>
+                        <button 
+                            onClick={() => handleNavigation('/register')} 
+                            className="btn-primary"
+                        >
+                            Get Started
+                        </button>
+                        <button 
+                            onClick={() => handleNavigation('/login')} 
+                            className="btn-secondary"
+                        >
+                            Login
+                        </button>
                     </div>
                     <p className="welcome-tip">💡 {randomTip}</p>
                 </div>
@@ -47,8 +61,18 @@ const WelcomeSection = () => {
                 <h2>👋 Welcome back, {user.username || 'User'}!</h2>
                 <p>What would you like to do today?</p>
                 <div className="welcome-actions">
-                    <Link to="/search" className="btn-primary">🔍 Search</Link>
-                    <Link to="/suggest" className="btn-secondary">💡 Suggest a Place</Link>
+                    <button 
+                        onClick={() => handleNavigation('/search')} 
+                        className="btn-primary"
+                    >
+                        🔍 Search
+                    </button>
+                    <button 
+                        onClick={() => handleNavigation('/suggest')} 
+                        className="btn-secondary"
+                    >
+                        💡 Suggest a Place
+                    </button>
                 </div>
                 {recentSearches.length > 0 && (
                     <div className="recent-searches">
