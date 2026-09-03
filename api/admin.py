@@ -45,9 +45,15 @@ class NewsAdmin(admin.ModelAdmin):
             'fields': ('source', 'source_url', 'featured_image', 'video_url')
         }),
         ('Status', {
-            'fields': ('is_published', 'is_published', 'expires_at', 'created_at', 'updated_at')
+            'fields': ('is_published', 'expires_at', 'created_at', 'updated_at')
         }),
     )
 
-admin.site.unregister(News)
+# Check if News is already registered before unregistering
+try:
+    admin.site.unregister(News)
+except admin.sites.NotRegistered:
+    pass
+
+# Register the News model with the custom admin
 admin.site.register(News, NewsAdmin)
