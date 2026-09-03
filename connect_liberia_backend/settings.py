@@ -120,22 +120,21 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# ============= MEDIA FILES =============
-# Using local storage with Render persistent disk
-DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# ============= MEDIA FILES - SUPABASE STORAGE =============
+# Use Supabase Storage (free, persistent)
+SUPABASE_URL = os.environ.get('SUPABASE_URL', 'https://pkuzqojtxxkkmfmmapzm.supabase.co')
+SUPABASE_ANON_KEY = os.environ.get('SUPABASE_ANON_KEY', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBrdXpxb2p0eHhra21mbW1hcHptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyNjcxOTQsImV4cCI6MjEwMjg0MzE5NH0.9xfDu3dzxhJGRoP_qSawBpFlN5nsemezUQEKmzaPUnc')
 
-# ============= SUPABASE STORAGE (DISABLED) =============
-# Supabase Storage Configuration - Commented out for local storage
-# SUPABASE_URL = os.environ.get('SUPABASE_URL')
-# SUPABASE_ANON_KEY = os.environ.get('SUPABASE_ANON_KEY')
-# 
-# if SUPABASE_URL and SUPABASE_ANON_KEY:
-#     from api.supabase_storage import SupabaseStorage
-#     DEFAULT_FILE_STORAGE = 'api.supabase_storage.SupabaseStorage'
-#     MEDIA_URL = f"{SUPABASE_URL}/storage/v1/object/public/institutions/"
-#     MEDIA_ROOT = ''
+if SUPABASE_URL and SUPABASE_ANON_KEY:
+    from api.supabase_storage import SupabaseStorage
+    DEFAULT_FILE_STORAGE = 'api.supabase_storage.SupabaseStorage'
+    MEDIA_URL = f"{SUPABASE_URL}/storage/v1/object/public/institutions/"
+    MEDIA_ROOT = ''
+else:
+    # Fallback to local storage
+    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # ============= DEFAULT AUTO FIELD =============
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -162,7 +161,7 @@ CORS_ALLOWED_ORIGINS += [
     "https://connect-liberia-admin.vercel.app",
     "https://connect-lib-1.onrender.com",
     "https://connect-liberia-website.onrender.com",
-     "https://connect-liberia-admin.onrender.com",
+    "https://connect-liberia-admin.onrender.com",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
