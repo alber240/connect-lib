@@ -16,46 +16,49 @@ const InstitutionDetail = () => {
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [galleryImages, setGalleryImages] = useState([]);
 
-  // Base URL for images from Render - only used for media_files that are relative paths
+  // Base URL for images from Render (local storage)
   const IMAGE_BASE_URL = 'https://connect-lib.onrender.com';
 
   const loadInstitution = useCallback(async () => {
-  setLoading(true);
-  setError(null);
-  try {
-    const data = await getInstitution(id);
-    if (data) {
-      setInstitution(data);
-      // Build gallery from cover image and any additional images
-      const images = [];
-      if (data.cover_image) {
-        // cover_image is already a full URL from the API - use it directly
-        images.push(data.cover_image);
-      }
-      // Add any additional images if available
-      if (data.media_files) {
-        data.media_files.forEach(media => {
-          if (media.media_type === 'image' && media.file) {
-            // Check if it's already a full URL
-            if (media.file.startsWith('http')) {
-              images.push(media.file);
-            } else {
-              images.push(`${IMAGE_BASE_URL}${media.file}`);
-            }
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await getInstitution(id);
+      if (data) {
+        setInstitution(data);
+        // Build gallery from cover image and any additional images
+        const images = [];
+        if (data.cover_image) {
+          // Check if it's a full URL or relative path
+          if (data.cover_image.startsWith('http')) {
+            images.push(data.cover_image);
+          } else {
+            images.push(`${IMAGE_BASE_URL}${data.cover_image}`);
           }
-        });
+        }
+        // Add any additional images if available
+        if (data.media_files) {
+          data.media_files.forEach(media => {
+            if (media.media_type === 'image' && media.file) {
+              if (media.file.startsWith('http')) {
+                images.push(media.file);
+              } else {
+                images.push(`${IMAGE_BASE_URL}${media.file}`);
+              }
+            }
+          });
+        }
+        setGalleryImages(images);
+      } else {
+        setError('Institution not found');
       }
-      setGalleryImages(images);
-    } else {
-      setError('Institution not found');
+    } catch (err) {
+      console.error('Error loading institution:', err);
+      setError('Failed to load institution details');
+    } finally {
+      setLoading(false);
     }
-  } catch (err) {
-    console.error('Error loading institution:', err);
-    setError('Failed to load institution details');
-  } finally {
-    setLoading(false);
-  }
-}, [id]);
+  }, [id]);
 
   useEffect(() => {
     loadInstitution();
@@ -116,12 +119,10 @@ const InstitutionDetail = () => {
 
   return (
     <div className="detail-page">
-      {/* Back Button */}
       <button onClick={() => navigate(-1)} className="back-button-top">
         ← Back
       </button>
 
-      {/* Cover Image / Gallery */}
       <div className="detail-cover">
         {galleryImages.length > 0 ? (
           <ImageGallery 
@@ -139,7 +140,6 @@ const InstitutionDetail = () => {
         )}
       </div>
 
-      {/* Main Content */}
       <div className="detail-content">
         <h1 className="detail-title">{institution.name}</h1>
         
@@ -151,7 +151,6 @@ const InstitutionDetail = () => {
           )}
         </div>
 
-        {/* Trust Section */}
         <div className="detail-section trust-section">
           <h3>🔒 About This Data</h3>
           <div className="trust-info">
@@ -181,7 +180,6 @@ const InstitutionDetail = () => {
           </div>
         </div>
 
-        {/* Video Section */}
         {institution.video_url && (
           <div className="detail-video">
             <h3>🎬 Video</h3>
@@ -197,7 +195,6 @@ const InstitutionDetail = () => {
           </div>
         )}
 
-        {/* Description */}
         {institution.description && (
           <div className="detail-section">
             <h3>📖 About</h3>
@@ -218,7 +215,6 @@ const InstitutionDetail = () => {
           </div>
         )}
 
-        {/* Services */}
         {institution.services && (
           <div className="detail-section">
             <h3>🛠️ Services</h3>
@@ -230,7 +226,6 @@ const InstitutionDetail = () => {
           </div>
         )}
 
-        {/* Contact Information */}
         <div className="detail-section contact-section">
           <h3>📞 Contact Information</h3>
           <div className="contact-grid">
@@ -275,7 +270,6 @@ const InstitutionDetail = () => {
           </div>
         </div>
 
-        {/* Engagement Section - Rating */}
         <div className="detail-section engagement-section">
           <div className="engagement-header">
             <h3>❤️ Rate & Review</h3>
@@ -288,7 +282,6 @@ const InstitutionDetail = () => {
           </div>
         </div>
 
-        {/* Engagement Section - Like Button */}
         <div className="detail-section engagement-section">
           <div className="engagement-header">
             <LikeButton 
@@ -300,12 +293,10 @@ const InstitutionDetail = () => {
           </div>
         </div>
 
-        {/* Engagement Section - Comments */}
         <div className="detail-section">
           <CommentSection type="institution" id={institution.id} />
         </div>
 
-        {/* Map Section */}
         {(institution.latitude && institution.longitude) && (
           <div className="detail-section">
             <h3>🗺️ Location</h3>
@@ -329,7 +320,6 @@ const InstitutionDetail = () => {
           </div>
         )}
 
-        {/* Source */}
         {institution.source && (
           <div className="detail-section source-section">
             <p className="source-text">
@@ -338,7 +328,6 @@ const InstitutionDetail = () => {
           </div>
         )}
 
-        {/* Actions */}
         <div className="detail-actions">
           <Link to="/" className="action-button">🔍 Search More</Link>
           <Link to="/suggest" className="action-button secondary">💡 Suggest Update</Link>

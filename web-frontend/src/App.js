@@ -132,10 +132,9 @@ function HomePage() {
     return emojis[category] || '📰';
   };
 
-  // Base URL for images from Render - only used for news images that are relative paths
+  // Base URL for images from Render
   const IMAGE_BASE_URL = 'https://connect-lib.onrender.com';
 
-  // Recent searches from localStorage
   const saveSearch = (term) => {
     if (!term) return;
     const searches = JSON.parse(localStorage.getItem('recentSearches') || '[]');
@@ -166,13 +165,9 @@ function HomePage() {
         <p className="institution-count">{institutions.length} institutions found</p>
       </header>
 
-      {/* Welcome Section */}
       <WelcomeSection />
-
-      {/* Did You Know? */}
       <DidYouKnow />
 
-      {/* Featured Institutions */}
       <div className="featured-section">
         <div className="section-header">
           <h2>⭐ Featured Institutions</h2>
@@ -188,7 +183,10 @@ function HomePage() {
               <Link to={`/institution/${inst.id}`} key={inst.id} className="featured-card">
                 <div className="featured-image">
                   {inst.cover_image ? (
-                    <img src={inst.cover_image} alt={inst.name} />
+                    <img 
+                      src={inst.cover_image.startsWith('http') ? inst.cover_image : `${IMAGE_BASE_URL}${inst.cover_image}`} 
+                      alt={inst.name} 
+                    />
                   ) : (
                     <div className="featured-no-image">📷</div>
                   )}
@@ -208,7 +206,6 @@ function HomePage() {
         </div>
       </div>
 
-      {/* Trending Section */}
       <div className="trending-section">
         <div className="section-header">
           <h2>🔥 Trending Now</h2>
@@ -232,7 +229,6 @@ function HomePage() {
         </div>
       </div>
 
-      {/* News Section */}
       <div className="news-section">
         <div className="news-header">
           <h2>📰 Latest News & Updates</h2>
@@ -249,7 +245,7 @@ function HomePage() {
                 {item.featured_image && (
                   <div className="news-image">
                     <img 
-                      src={item.featured_image} 
+                      src={item.featured_image.startsWith('http') ? item.featured_image : `${IMAGE_BASE_URL}${item.featured_image}`} 
                       alt={item.title}
                       onError={(e) => e.target.style.display = 'none'}
                     />
@@ -271,7 +267,6 @@ function HomePage() {
         )}
       </div>
 
-      {/* Search Section */}
       <div className="search-section">
         <div className="search-bar">
           <input
@@ -321,7 +316,6 @@ function HomePage() {
         </div>
       </div>
 
-      {/* Results */}
       <div className="results">
         {error && (
           <div className="error-message">
@@ -343,7 +337,7 @@ function HomePage() {
                   {inst.cover_image && (
                     <div className="card-image">
                       <img 
-                        src={inst.cover_image}  
+                        src={inst.cover_image.startsWith('http') ? inst.cover_image : `${IMAGE_BASE_URL}${inst.cover_image}`} 
                         alt={inst.name}
                         onError={(e) => {
                           e.target.style.display = 'none';

@@ -1,7 +1,8 @@
 import axios from 'axios';
 
-// Replace with your Render backend URL
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://connect-lib.onrender.com/api';
+// Use environment variable or fallback to production URL
+// Force the correct API URL for Render
+const API_BASE_URL = 'https://connect-lib.onrender.com/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -10,9 +11,79 @@ const api = axios.create({
   },
 });
 
-// ============ INSTITUTIONS ============
+// Add token to requests if it exists
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
-// Get all institutions (with optional search/filters)
+// Handle token refresh on 401
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      try {
+        const refreshToken = localStorage.getItem('refresh_token');
+        const response = await axios.post(`${API_BASE_URL}/token/refresh/`, {
+          refresh: refreshToken,
+        });
+        localStorage.setItem('access_token', response.data.access);
+        originalRequest.headers.Authorization = `Bearer ${response.data.access}`;
+        return api(originalRequest);
+      } catch (e) {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        window.location.href = '/login';
+        return Promise.reject(e);
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
+// ============ AUTH ============
+export const login = async (username, password) => {
+  try {
+    const response = await axios.post(`${API_BASE_URL}/token/`, {
+      username,
+      password,
+    });
+    if (response.data.access) {
+      localStorage.setItem('access_token', response.data.access);
+      localStorage.setItem('refresh_token', response.data.refresh);
+      return response.data;
+    }
+    throw new Error('No access token received');
+  } catch (error) {
+    console.error('Login API error:', error.response?.data || error.message);
+    throw error.response?.data || { error: 'Login failed' };
+  }
+};
+
+export const logout = () => {
+  localStorage.removeItem('access_token');
+  localStorage.removeItem('refresh_token');
+};
+
+export const isAuthenticated = () => {
+  return !!localStorage.getItem('access_token');
+};
+
+// ============ DASHBOARD ============
+export const getDashboardStats = async () => {
+  const response = await api.get('/dashboard/stats/');
+  return response.data;
+};
+
+// ============ INSTITUTIONS ============
 export const getInstitutions = async (params = {}) => {
   try {
     const response = await api.get('/institutions/', { params });
@@ -26,7 +97,6 @@ export const getInstitutions = async (params = {}) => {
   }
 };
 
-// Get a single institution by ID
 export const getInstitution = async (id) => {
   try {
     const response = await api.get(`/institutions/${id}/`);
@@ -38,8 +108,6 @@ export const getInstitution = async (id) => {
 };
 
 // ============ COUNTIES ============
-
-// Get all counties
 export const getCounties = async () => {
   try {
     const response = await api.get('/counties/');
@@ -54,8 +122,6 @@ export const getCounties = async () => {
 };
 
 // ============ NEWS ============
-
-// Get all news
 export const getNews = async () => {
   try {
     const response = await api.get('/news/');
@@ -69,7 +135,6 @@ export const getNews = async () => {
   }
 };
 
-// Get latest news (for homepage)
 export const getLatestNews = async (limit = 4) => {
   try {
     const response = await api.get(`/news/?limit=${limit}`);
@@ -84,8 +149,6 @@ export const getLatestNews = async (limit = 4) => {
 };
 
 // ============ USER AUTHENTICATION ============
-
-// User Registration
 export const register = async (username, email, password, password2) => {
   try {
     const response = await api.post('/register/', {
@@ -100,7 +163,6 @@ export const register = async (username, email, password, password2) => {
   }
 };
 
-// User Login (uses JWT)
 export const userLogin = async (username, password) => {
   try {
     const response = await api.post('/token/', {
@@ -119,26 +181,21 @@ export const userLogin = async (username, password) => {
   }
 };
 
-// User Logout
 export const userLogout = () => {
   localStorage.removeItem('user_token');
   localStorage.removeItem('user_refresh');
   localStorage.removeItem('user_username');
 };
 
-// Check if user is logged in
 export const isUserLoggedIn = () => {
   return !!localStorage.getItem('user_token');
 };
 
-// Get current logged in user
 export const getCurrentUser = () => {
   return localStorage.getItem('user_username');
 };
 
 // ============ SUGGESTIONS ============
-
-// Submit a suggestion
 export const submitSuggestion = async (suggestionData) => {
   try {
     const response = await api.post('/suggestions/', suggestionData);

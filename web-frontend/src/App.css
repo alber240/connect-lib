@@ -913,3 +913,326 @@
     left: 8px;
     font-size: 1.2rem;
 }
+
+
+/* ============= MOBILE RESPONSIVENESS ============= */
+
+/* Mobile First - Base styles for all devices */
+* {
+  box-sizing: border-box;
+}
+
+/* Mobile (up to 480px) */
+@media (max-width: 480px) {
+  .header {
+    padding: 16px !important;
+    margin: 10px 0 15px !important;
+    border-radius: 10px !important;
+  }
+
+  .header-top {
+    flex-direction: column !important;
+    text-align: center !important;
+    gap: 10px !important;
+  }
+
+  .header-top h1 {
+    font-size: 1.2rem !important;
+  }
+
+  .header-actions {
+    justify-content: center !important;
+    flex-wrap: wrap !important;
+  }
+
+  .header-link, .logout-btn {
+    padding: 4px 12px !important;
+    font-size: 0.75rem !important;
+  }
+
+  .header p {
+    font-size: 0.85rem !important;
+    text-align: center !important;
+  }
+
+  .institution-count {
+    font-size: 0.75rem !important;
+  }
+
+  /* Search Section Mobile */
+  .search-section {
+    padding: 14px !important;
+  }
+
+  .search-bar input {
+    font-size: 0.9rem !important;
+    padding: 10px 14px !important;
+  }
+
+  .filters {
+    flex-direction: column !important;
+  }
+
+  .filters select {
+    min-width: 100% !important;
+    font-size: 0.85rem !important;
+    padding: 8px 12px !important;
+  }
+
+  .filters button {
+    width: 100% !important;
+    font-size: 0.85rem !important;
+  }
+
+  /* Institution Cards Mobile */
+  .institution-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .institution-card {
+    border-radius: 10px !important;
+  }
+
+  .card-image {
+    height: 140px !important;
+  }
+
+  .card-body {
+    padding: 12px 14px !important;
+  }
+
+  .card-header h3 {
+    font-size: 0.9rem !important;
+  }
+
+  .category, .county, .address, .phone {
+    font-size: 0.75rem !important;
+  }
+
+  /* News Section Mobile */
+  .news-section {
+    padding: 14px !important;
+  }
+
+  .news-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .news-card {
+    border-radius: 8px !important;
+  }
+
+  .news-image {
+    height: 100px !important;
+  }
+
+  .news-content {
+    padding: 10px 12px !important;
+  }
+
+  .news-content h3 {
+    font-size: 0.85rem !important;
+  }
+
+  .news-content p {
+    font-size: 0.75rem !important;
+  }
+
+  /* Featured Section Mobile */
+  .featured-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .featured-card {
+    border-radius: 8px !important;
+  }
+
+  .featured-image {
+    height: 100px !important;
+  }
+
+  /* Trending Section Mobile */
+  .trending-item {
+    padding: 8px 12px !important;
+  }
+
+  .trending-info h4 {
+    font-size: 0.8rem !important;
+  }
+
+  .trending-info p {
+    font-size: 0.7rem !important;
+  }
+
+  /* Detail Page Mobile */
+  .detail-page {
+    padding: 10px !important;
+  }
+
+  .detail-cover {
+    height: 180px !important;
+    border-radius: 10px !important;
+  }
+
+  .detail-content {
+    padding: 14px !important;
+  }
+
+  .detail-title {
+    font-size: 1.3rem !important;
+  }
+
+  .detail-meta {
+    flex-direction: column !important;
+    gap: 4px !important;
+  }
+
+  .contact-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .detail-actions {
+    flex-direction: column !important;
+  }
+
+  .action-button {
+    text-align: center !important;
+    width: 100% !important;
+  }
+
+  /* Footer Mobile */
+  .footer {
+    padding: 20px 10px !important;
+  }
+
+  .footer-links {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+
+  .footer-links span {
+    display: none !important;
+  }
+
+  /* Welcome Section Mobile */
+  .welcome-banner {
+    padding: 16px 18px !important;
+  }
+
+  .welcome-banner h2 {
+    font-size: 1.1rem !important;
+  }
+
+  .welcome-actions {
+    flex-direction: column !important;
+  }
+
+  .welcome-actions a {
+    text-align: center !important;
+  }
+
+  /* Did You Know Mobile */
+  .dyk-content {
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+  }
+}
+
+/* Tablet (481px - 768px) */
+@media (min-width: 481px) and (max-width: 768px) {
+  .header {
+    padding: 20px 24px !important;
+  }
+
+  .header-top h1 {
+    font-size: 1.5rem !important;
+  }
+
+  .institution-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .news-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .featured-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .filters {
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+  }
+
+  .filters select {
+    flex: 1 !important;
+    min-width: 120px !important;
+  }
+
+  .contact-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .detail-cover {
+    height: 220px !important;
+  }
+}
+
+/* Small fixes for all mobile devices */
+@media (max-width: 768px) {
+  .verified-badge-large {
+    top: 10px !important;
+    right: 10px !important;
+    font-size: 0.7rem !important;
+    padding: 4px 12px !important;
+  }
+
+  .featured-badge-large {
+    top: 50px !important;
+    right: 10px !important;
+    font-size: 0.7rem !important;
+    padding: 4px 12px !important;
+  }
+
+  .gallery-controls {
+    bottom: 8px !important;
+  }
+
+  .gallery-btn {
+    font-size: 1.2rem !important;
+    padding: 6px 12px !important;
+  }
+
+  .gallery-counter {
+    font-size: 0.75rem !important;
+  }
+
+  .stats-bar {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 8px !important;
+    padding: 10px !important;
+  }
+
+  .stat-number {
+    font-size: 1.2rem !important;
+  }
+
+  .stat-label {
+    font-size: 0.65rem !important;
+  }
+
+  .filters-bar {
+    flex-direction: column !important;
+  }
+
+  .filters-bar .search-box {
+    width: 100% !important;
+  }
+
+  .filter-select {
+    width: 100% !important;
+  }
+}

@@ -28,12 +28,15 @@ const Login = () => {
   return (
     <div className="auth-page">
       <div className="auth-container">
+        {/* Back to Home Button */}
+        <div className="auth-back">
+          <Link to="/" className="back-home-link">← Back to Home</Link>
+        </div>
         <h1>🔐 Login</h1>
         <p>Sign in to save favorites and submit suggestions</p>
 
         <form onSubmit={handleSubmit}>
           {error && <div className="auth-error">{error}</div>}
-
           <div className="form-group">
             <label>Username</label>
             <input
@@ -43,7 +46,6 @@ const Login = () => {
               required
             />
           </div>
-
           <div className="form-group">
             <label>Password</label>
             <input
@@ -53,7 +55,6 @@ const Login = () => {
               required
             />
           </div>
-
           <button type="submit" className="btn-primary" disabled={loading}>
             {loading ? 'Logging in...' : 'Login'}
           </button>

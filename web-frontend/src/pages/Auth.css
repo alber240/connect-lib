@@ -121,3 +121,21 @@
     font-size: 1.4rem;
   }
 }
+/* Add these styles for the back button */
+.auth-back {
+  text-align: left;
+  margin-bottom: 15px;
+}
+
+.back-home-link {
+  color: #2e86c1;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: color 0.3s;
+}
+
+.back-home-link:hover {
+  color: #1a5276;
+  text-decoration: underline;
+}

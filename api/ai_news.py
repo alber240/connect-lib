@@ -1,56 +1,44 @@
-import openai
-import requests
-from bs4 import BeautifulSoup
+﻿import feedparser
+import os
 from .models import News
 
-# Configure OpenAI (you'll need an API key)
-openai.api_key = os.environ.get('OPENAI_API_KEY')
+# News sources
+NEWS_SOURCES = [
+    {'name': 'Liberian Observer', 'url': 'https://www.liberianobserver.com/feed'},
+    {'name': 'FrontPage Africa', 'url': 'https://frontpageafricaonline.com/feed'},
+    {'name': 'The New Dawn', 'url': 'https://thenewdawnliberia.com/feed'},
+    {'name': 'Government of Liberia', 'url': 'https://www.emansion.gov.lr/rss'},
+    {'name': 'UNMIL Liberia', 'url': 'https://unmil.unmissions.org/rss/feed'},
+]
 
-def fetch_news_from_rss(url):
-    """Fetch news from RSS feed"""
-    response = requests.get(url)
-    # Parse RSS and return articles
-    # ...
-
-def summarize_article(content):
-    """Summarize article using AI"""
-    try:
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "Summarize this news article in 2-3 sentences."},
-                {"role": "user", "content": content}
-            ],
-            max_tokens=100
-        )
-        return response.choices[0].message.content
-    except Exception as e:
-        return content[:200] + "..."
-
-def categorize_article(content):
-    """Categorize article using AI"""
-    categories = ['announcement', 'update', 'event', 'alert', 'general']
-    # Use AI to determine category
-    # ...
-
-def generate_news_from_sources():
-    """Main function to fetch, summarize, and publish news"""
-    sources = [
-        'https://www.emansion.gov.lr/rss',
-        'https://www.liberianobserver.com/feed',
-        # ... more sources
-    ]
+def fetch_and_summarize_news():
+    print("Starting AI News Aggregation...")
+    print("=" * 50)
     
-    for source in sources:
-        articles = fetch_news_from_rss(source)
-        for article in articles:
-            summary = summarize_article(article.content)
-            category = categorize_article(article.content)
+    new_articles = 0
+    
+    for source in NEWS_SOURCES:
+        try:
+            print(f"Fetching from: {source['name']}")
+            feed = feedparser.parse(source['url'])
             
-            News.objects.create(
-                title=article.title,
-                content=summary,
-                category=category,
-                source=source,
-                is_published=True
-            )
+            for entry in feed.entries[:5]:
+                if not News.objects.filter(title=entry.title).exists():
+                    content = entry.summary if entry.summary else entry.description if entry.description else ''
+                    content = content[:300]
+                    
+                    News.objects.create(
+                        title=entry.title,
+                        content=content,
+                        category='general',
+                        source=entry.link,
+                        is_published=True
+                    )
+                    new_articles += 1
+                    print(f"  Added: {entry.title[:60]}...")
+        except Exception as e:
+            print(f"Error fetching {source['name']}: {e}")
+    
+    print("=" * 50)
+    print(f"Added {new_articles} new articles")
+    return new_articles
