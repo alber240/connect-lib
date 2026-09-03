@@ -27,7 +27,7 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-#)j-a5g)js7mue
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
 # Allowed hosts - update for production
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,.railway.app,.vercel.app').split(',')
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,.railway.app,.vercel.app,.onrender.com').split(',')
 
 # ============= APPLICATION DEFINITION =============
 INSTALLED_APPS = [
@@ -148,7 +148,42 @@ else:
     CORS_ALLOWED_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS', '').split(',')
     CORS_ALLOWED_ORIGINS = [url for url in CORS_ALLOWED_ORIGINS if url]
 
+# ============= ADD FRONTEND URLS TO CORS =============
+# Explicitly add all frontend URLs
+CORS_ALLOWED_ORIGINS += [
+    "https://connect-liberia-website.vercel.app",
+    "https://connect-liberia-admin.vercel.app",
+    "https://connect-lib-1.onrender.com",
+    "https://connect-liberia-website.onrender.com",
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:3001",
+]
+
 CORS_ALLOW_CREDENTIALS = True
+
+# Additional CORS headers
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
 
 # ============= JWT AUTHENTICATION =============
 SIMPLE_JWT = {
