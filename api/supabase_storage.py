@@ -31,6 +31,7 @@ class SupabaseStorage(Storage):
         return self.client
 
     def _get_content_type(self, name):
+        """Get content type based on file extension"""
         ext = name.split('.')[-1].lower()
         content_types = {
             'jpg': 'image/jpeg',
@@ -46,6 +47,7 @@ class SupabaseStorage(Storage):
         return content_types.get(ext, 'application/octet-stream')
 
     def _upload_to_supabase(self, name, content):
+        """Upload file to Supabase Storage"""
         client = self._get_client()
         
         if hasattr(content, 'read'):
@@ -58,7 +60,7 @@ class SupabaseStorage(Storage):
             # Upload to the 'covers' folder
             upload_path = f"covers/{name}"
             
-            client.storage.from_(self.bucket).upload(
+            response = client.storage.from_(self.bucket).upload(
                 upload_path,
                 file_content,
                 {'content-type': self._get_content_type(name)}
@@ -71,6 +73,7 @@ class SupabaseStorage(Storage):
             raise
 
     def _save(self, name, content):
+        """Save file to Supabase Storage"""
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         name_parts = name.split('.')
         ext = name_parts[-1] if len(name_parts) > 1 else ''
@@ -82,6 +85,7 @@ class SupabaseStorage(Storage):
         return self._upload_to_supabase(unique_name, content)
 
     def _open(self, name, mode='rb'):
+        """Open file from Supabase Storage"""
         # Clean the path
         name = self._clean_path(name)
         url = f"{self.bucket_url}/{name}"
@@ -91,12 +95,14 @@ class SupabaseStorage(Storage):
         raise FileNotFoundError(f"File {name} not found in Supabase")
 
     def exists(self, name):
+        """Check if file exists in Supabase"""
         name = self._clean_path(name)
         url = f"{self.bucket_url}/{name}"
         response = requests.head(url)
         return response.status_code == 200
 
     def delete(self, name):
+        """Delete file from Supabase"""
         try:
             client = self._get_client()
             name = self._clean_path(name)
@@ -107,35 +113,39 @@ class SupabaseStorage(Storage):
             return False
 
     def url(self, name):
-        """Get public URL for file"""
-        # Clean the path - this is the most important fix!
+        """Get public URL for file - FIXED to remove duplicate bucket names"""
+        # Clean the path first
         name = self._clean_path(name)
         return f"{self.bucket_url}/{name}"
 
     def _clean_path(self, name):
-        """Remove duplicate bucket names from the path"""
+        """
+        Clean the file path to ensure it has the correct format.
+        Removes duplicate bucket names and ensures 'covers/' prefix.
+        """
+        if not name:
+            return name
+        
         # Remove any duplicate bucket name prefixes
         if name.startswith(f"{self.bucket}/{self.bucket}/"):
-            name = name.replace(f"{self.bucket}/{self.bucket}/", f"{self.bucket}/", 1)
+            name = name.replace(f"{self.bucket}/{self.bucket}/", "", 1)
         
-        # If it starts with 'institutions/' but shouldn't (since it's already the bucket)
+        # Remove duplicate bucket name if it appears twice
         if name.startswith(f"{self.bucket}/"):
-            # This is correct, keep it
-            pass
+            # Check if there's another bucket name after
+            remaining = name[len(f"{self.bucket}/"):]
+            if remaining.startswith(f"{self.bucket}/"):
+                name = name.replace(f"{self.bucket}/{self.bucket}/", "", 1)
         
-        # If it starts with just the bucket name without slash
-        if name.startswith(f"{self.bucket}"):
-            # Add the slash if missing
-            if not name.startswith(f"{self.bucket}/"):
-                name = name.replace(f"{self.bucket}", f"{self.bucket}/", 1)
+        # If it still starts with the bucket name, remove it
+        if name.startswith(f"{self.bucket}/"):
+            name = name[len(f"{self.bucket}/"):]
         
-        # Make sure it has 'covers/' at the beginning
+        # If it doesn't start with 'covers/', add it
         if not name.startswith('covers/'):
-            # If it doesn't have covers/, add it
-            if name.startswith(f"{self.bucket}/"):
-                # Remove the bucket prefix and add covers/
-                name = name.replace(f"{self.bucket}/", "covers/", 1)
-            else:
-                name = f"covers/{name}"
+            name = f"covers/{name}"
         
         return name
+
+# Export the storage class
+__all__ = ['SupabaseStorage']
