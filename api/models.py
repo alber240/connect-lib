@@ -1,4 +1,5 @@
 ﻿from django.db import models
+from django.utils import timezone
 from django.contrib.auth.models import User
 
 class County(models.Model):
@@ -14,6 +15,7 @@ class County(models.Model):
     class Meta:
         ordering = ['name']
         verbose_name_plural = "Counties"
+
 
 class Institution(models.Model):
     """All institutions (hospitals, schools, govt offices, businesses)"""
@@ -87,6 +89,7 @@ class Institution(models.Model):
             models.Index(fields=['county']),
         ]
 
+
 class Suggestion(models.Model):
     """User suggestions for adding/updating institutions"""
     
@@ -125,6 +128,7 @@ class Suggestion(models.Model):
     class Meta:
         ordering = ['-created_at']
 
+
 class News(models.Model):
     """News and updates about institutions and Liberia"""
     
@@ -143,14 +147,30 @@ class News(models.Model):
     institution = models.ForeignKey(Institution, on_delete=models.SET_NULL, null=True, blank=True, related_name='news')
     
     source = models.URLField(blank=True, null=True)
+    source_url = models.URLField(blank=True, null=True, help_text="Link to original article")
     is_published = models.BooleanField(default=True)
     
     # Media
     featured_image = models.ImageField(upload_to='news/', blank=True, null=True)
     video_url = models.URLField(blank=True, null=True)
     
+    # Expiry
+    expires_at = models.DateTimeField(null=True, blank=True, help_text="When this news expires (auto-set to 48 hours)")
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
+    def save(self, *args, **kwargs):
+        # Auto-set expiry to 48 hours from now if not set
+        if not self.expires_at:
+            self.expires_at = timezone.now() + timezone.timedelta(hours=48)
+        super().save(*args, **kwargs)
+    
+    def is_expired(self):
+        """Check if the news is expired"""
+        if self.expires_at:
+            return timezone.now() > self.expires_at
+        return False
     
     def __str__(self):
         return self.title
@@ -158,6 +178,7 @@ class News(models.Model):
     class Meta:
         ordering = ['-created_at']
         verbose_name_plural = "News"
+
 
 class Media(models.Model):
     """Images and videos for institutions"""
@@ -183,6 +204,7 @@ class Media(models.Model):
         ordering = ['order']
         verbose_name_plural = "Media"
 
+
 class Like(models.Model):
     """User likes on institutions, news, etc."""
     CONTENT_TYPES = [
@@ -202,6 +224,7 @@ class Like(models.Model):
     def __str__(self):
         return f"{self.user.username} likes {self.content_type} {self.content_id}"
 
+
 class Comment(models.Model):
     """User comments on institutions, news, etc."""
     CONTENT_TYPES = [
@@ -220,6 +243,7 @@ class Comment(models.Model):
 
     def __str__(self):
         return f"{self.user.username} on {self.content_type} {self.content_id}"
+
 
 class Rating(models.Model):
     """User ratings for institutions (1-5 stars)"""
