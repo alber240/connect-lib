@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useUserAuth } from '../context/UserAuthContext';
 import { useToast } from '../context/ToastContext';
+import { trackFavorite } from '../utils/analytics';
 import './FavoriteButton.css';
 
-const FavoriteButton = ({ institutionId, initialFavorited = false, initialCount = 0 }) => {
+const FavoriteButton = ({ institutionId, institutionName, initialFavorited = false, initialCount = 0 }) => {
     const { user } = useUserAuth();
     const { showToast } = useToast();
     const [favorited, setFavorited] = useState(initialFavorited);
@@ -40,10 +41,15 @@ const FavoriteButton = ({ institutionId, initialFavorited = false, initialCount 
             setFavorited(data.favorited);
             setCount(data.total_favorites || count);
 
+            // Track analytics
             if (data.favorited) {
                 showToast('❤️ Added to favorites!', 'success');
+                // Track the favorite action with institution name
+                trackFavorite(institutionName || 'Unknown Institution', 'Add');
             } else {
                 showToast('Removed from favorites', 'info');
+                // Track the unfavorite action
+                trackFavorite(institutionName || 'Unknown Institution', 'Remove');
             }
         } catch (error) {
             console.error('Error toggling favorite:', error);

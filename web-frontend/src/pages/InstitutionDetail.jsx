@@ -9,6 +9,13 @@ import ReviewSection from '../components/ReviewSection';
 import FavoriteButton from '../components/FavoriteButton';
 import getImageUrl from '../utils/imageHelpers';
 import './InstitutionDetail.css';
+import { trackInstitutionView } from '../utils/analytics';
+
+useEffect(() => {
+    if (institution) {
+        trackInstitutionView(institution.name, institution.id);
+    }
+}, [institution]);
 
 const InstitutionDetail = () => {
   const { id } = useParams();
@@ -208,13 +215,14 @@ const InstitutionDetail = () => {
         )}
 
         {/* Favorite Button */}
-        <div className="detail-section">
-          <FavoriteButton 
-            institutionId={institution.id}
-            initialFavorited={institution.is_favorited || false}
-            initialCount={0}
-          />
-        </div>
+<div className="detail-section">
+    <FavoriteButton 
+        institutionId={institution.id}
+        institutionName={institution.name}
+        initialFavorited={institution.is_favorited || false}
+        initialCount={institution.favorites_count || 0}
+    />
+</div>
 
         {/* Description */}
         {institution.description && (
