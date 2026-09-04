@@ -43,6 +43,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'django_filters',
     'whitenoise.runserver_nostatic',
+    # Email
+    'anymail',  # For email notifications
     # 'storages',  # COMMENTED OUT - Using local storage
     # Local apps
     'api',
@@ -68,7 +70,7 @@ ROOT_URLCONF = 'connect_liberia_backend.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'api' / 'templates'],  # Add templates directory
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -135,6 +137,36 @@ else:
     DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
     MEDIA_URL = '/media/'
     MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# ============= EMAIL CONFIGURATION =============
+# Using SendGrid for email (free tier: 100 emails/day)
+# Or use console for development
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
+# Use SendGrid if API key is available, otherwise console
+if os.environ.get('SENDGRID_API_KEY'):
+    EMAIL_BACKEND = 'sendgrid_backend.SendgridBackend'
+    SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY')
+    SENDGRID_SANDBOX_MODE_IN_DEBUG = False
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# Email settings
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'Connect Liberia <noreply@connect-lib.onrender.com>')
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.sendgrid.net')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'apikey')
+EMAIL_HOST_PASSWORD = os.environ.get('SENDGRID_API_KEY', '')
+
+# Email templates configuration
+EMAIL_TEMPLATES = {
+    'welcome': 'emails/welcome.html',
+    'password_reset': 'emails/password_reset.html',
+    'suggestion_status': 'emails/suggestion_status.html',
+    'newsletter': 'emails/newsletter.html',
+}
 
 # ============= DEFAULT AUTO FIELD =============
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -220,7 +252,7 @@ if not DEBUG:
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = 'DENY'
 
-# ============= LOGGING (Optional) =============
+# ============= LOGGING =============
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -228,9 +260,55 @@ LOGGING = {
         'console': {
             'class': 'logging.StreamHandler',
         },
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs', 'debug.log'),
+            'formatter': 'verbose',
+        },
+    },
+    'formatters': {
+        'verbose': {
+            'format': '{asctime} - {levelname} - {name} - {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{asctime} - {levelname} - {message}',
+            'style': '{',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': os.environ.get('DJANGO_LOG_LEVEL', 'WARNING'),
+        },
+        'api': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
     },
     'root': {
         'handlers': ['console'],
         'level': 'WARNING',
     },
 }
+
+# ============= AI / OPENROUTER CONFIGURATION =============
+OPENROUTER_API_KEY = os.environ.get('OPENROUTER_API_KEY', '')
+OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+
+# ============= ANALYTICS =============
+# Google Analytics (optional)
+GOOGLE_ANALYTICS_ID = os.environ.get('GOOGLE_ANALYTICS_ID', '')
+
+# ============= SITE CONFIGURATION =============
+SITE_NAME = 'Connect Liberia'
+SITE_URL = os.environ.get('SITE_URL', 'https://connect-lib-1.onrender.com')
+SITE_DESCRIPTION = 'Making information about institutions across Liberia easily accessible to everyone.'
+
+# ============= FRONTEND URLS =============
+FRONTEND_URL = os.environ.get('FRONTEND_URL', 'https://connect-lib-1.onrender.com')
+ADMIN_FRONTEND_URL = os.environ.get('ADMIN_FRONTEND_URL', 'https://connect-liberia-admin.onrender.com')
+
+# ============= PASSWORD RESET =============
+PASSWORD_RESET_TIMEOUT = 86400  # 24 hours in seconds
