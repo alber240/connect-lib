@@ -1,13 +1,16 @@
 from rest_framework import viewsets, status, filters
-from rest_framework.decorators import action
+from rest_framework.decorators import api_view, permission_classes, action
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.db import models
+from django.contrib.auth.models import User
 from .models import County, Institution, Suggestion, News
 from .serializers import (
     CountySerializer, InstitutionSerializer, InstitutionDetailSerializer,
     SuggestionSerializer, NewsSerializer
 )
+
 
 class CountyViewSet(viewsets.ReadOnlyModelViewSet):
     """View all 15 counties"""
@@ -16,6 +19,7 @@ class CountyViewSet(viewsets.ReadOnlyModelViewSet):
     filter_backends = [filters.SearchFilter]
     search_fields = ['name']
     lookup_field = 'name'
+
 
 class InstitutionViewSet(viewsets.ModelViewSet):
     """View, search, and filter institutions"""
@@ -26,6 +30,12 @@ class InstitutionViewSet(viewsets.ModelViewSet):
     search_fields = ['name', 'description', 'address', 'category']
     ordering_fields = ['name', 'created_at']
     ordering = ['name']
+    
+    def get_serializer_context(self):
+        """Pass request to serializer for is_favorited field"""
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
     
     def get_serializer_class(self):
         if self.action == 'retrieve':
@@ -69,6 +79,7 @@ class InstitutionViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
+
 class SuggestionViewSet(viewsets.ModelViewSet):
     """Handle user suggestions"""
     queryset = Suggestion.objects.all()
@@ -83,6 +94,7 @@ class SuggestionViewSet(viewsets.ModelViewSet):
             "suggestion": serializer.data
         }, status=status.HTTP_201_CREATED)
 
+
 class NewsViewSet(viewsets.ReadOnlyModelViewSet):
     """View news and updates"""
     queryset = News.objects.filter(is_published=True)
@@ -91,19 +103,14 @@ class NewsViewSet(viewsets.ReadOnlyModelViewSet):
     filterset_fields = ['category', 'county__name']
     search_fields = ['title', 'content']
     ordering = ['-created_at']
-    
-    
-from django.contrib.auth.models import User
-from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
-from rest_framework.response import Response
 
-# ... existing imports ...
+
+# ============ AUTHENTICATION VIEWS ============
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def register(request):
+    """Register a new user"""
     username = request.data.get('username')
     email = request.data.get('email')
     password = request.data.get('password')
@@ -145,3 +152,34 @@ def register(request):
         {'message': 'User created successfully'},
         status=status.HTTP_201_CREATED
     )
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_user(request):
+    """Get current authenticated user info"""
+    user = request.user
+    return Response({
+        'id': user.id,
+        'username': user.username,
+        'email': user.email,
+        'first_name': user.first_name,
+        'last_name': user.last_name,
+        'is_authenticated': True,
+    })
+
+
+# ============ JWT TOKEN VIEWS (if not using djangorestframework_simplejwt built-in) ============
+
+# If you're using djangorestframework_simplejwt, import these
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+
+# Otherwise, these are the built-in views
+class CustomTokenObtainPairView(TokenObtainPairView):
+    """Custom token obtain view"""
+    pass
+
+
+class CustomTokenRefreshView(TokenRefreshView):
+    """Custom token refresh view"""
+    pass

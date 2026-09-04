@@ -18,6 +18,9 @@ urlpatterns = [
     
     # ===== Authentication =====
     path('register/', views.register, name='register'),
+    path('token/', views.CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('token/refresh/', views.CustomTokenRefreshView.as_view(), name='token_refresh'),
+    path('user/', views.get_user, name='get_user'),  # 🔑 User endpoint for frontend
     
     # ===== Dashboard Routes =====
     # Stats

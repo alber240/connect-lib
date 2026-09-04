@@ -1,6 +1,21 @@
 ﻿from rest_framework import serializers
 from .models import County, Institution, Suggestion, News, Comment, Rating, Media
 from django.utils import timezone
+from urllib.parse import urlparse
+
+# Supabase configuration for image URLs
+SUPABASE_URL = 'https://pkuzqojtxxkkmfmmapzm.supabase.co'
+STORAGE_BUCKET = 'institutions'
+
+def get_full_image_url(image_path):
+    """Convert relative image path to full Supabase URL"""
+    if not image_path:
+        return None
+    if image_path.startswith('http://') or image_path.startswith('https://'):
+        return image_path
+    # Remove leading slash if present
+    clean_path = image_path.lstrip('/')
+    return f"{SUPABASE_URL}/storage/v1/object/public/{STORAGE_BUCKET}/{clean_path}"
 
 class CountySerializer(serializers.ModelSerializer):
     institution_count = serializers.IntegerField(source='institutions.count', read_only=True)
@@ -9,8 +24,21 @@ class CountySerializer(serializers.ModelSerializer):
         model = County
         fields = ['id', 'name', 'description', 'capital', 'population', 'institution_count']
 
+class MediaSerializer(serializers.ModelSerializer):
+    file_url = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Media
+        fields = ['id', 'institution', 'media_type', 'file', 'file_url', 'video_url', 
+                  'title', 'caption', 'is_cover', 'order', 'uploaded_at']
+    
+    def get_file_url(self, obj):
+        return get_full_image_url(obj.file.url if obj.file else None)
+
 class InstitutionSerializer(serializers.ModelSerializer):
     county_name = serializers.CharField(source='county.name', read_only=True)
+    cover_image_url = serializers.SerializerMethodField()
+    is_favorited = serializers.SerializerMethodField()
     
     class Meta:
         model = Institution
@@ -19,21 +47,44 @@ class InstitutionSerializer(serializers.ModelSerializer):
             'district', 'address', 'phone', 'phone2', 'email', 'website',
             'description', 'services', 'opening_hours',
             'latitude', 'longitude', 'google_maps_link',
-            'is_verified', 'is_featured', 'source', 'cover_image',
+            'is_verified', 'is_featured', 'source', 
+            'cover_image', 'cover_image_url',
             'video_url', 'likes', 'average_rating', 'total_ratings',
-            'created_at', 'updated_at'
+            'is_favorited', 'created_at', 'updated_at'
         ]
+    
+    def get_cover_image_url(self, obj):
+        return get_full_image_url(obj.cover_image.url if obj.cover_image else None)
+    
+    def get_is_favorited(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            from .models import Favorite
+            return Favorite.objects.filter(user=request.user, institution=obj).exists()
+        return False
 
 class InstitutionDetailSerializer(serializers.ModelSerializer):
     county_name = serializers.CharField(source='county.name', read_only=True)
+    cover_image_url = serializers.SerializerMethodField()
     media_files = serializers.SerializerMethodField()
+    is_favorited = serializers.SerializerMethodField()
     
     class Meta:
         model = Institution
         fields = '__all__'
     
+    def get_cover_image_url(self, obj):
+        return get_full_image_url(obj.cover_image.url if obj.cover_image else None)
+    
     def get_media_files(self, obj):
         return MediaSerializer(obj.media_files.all(), many=True).data
+    
+    def get_is_favorited(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            from .models import Favorite
+            return Favorite.objects.filter(user=request.user, institution=obj).exists()
+        return False
 
 class SuggestionSerializer(serializers.ModelSerializer):
     class Meta:
@@ -43,17 +94,31 @@ class SuggestionSerializer(serializers.ModelSerializer):
                   'status', 'admin_notes', 'created_at', 'updated_at']
 
 class NewsSerializer(serializers.ModelSerializer):
+    is_expired = serializers.SerializerMethodField()
+    source_domain = serializers.SerializerMethodField()
+    featured_image_url = serializers.SerializerMethodField()
+    
     class Meta:
         model = News
         fields = ['id', 'title', 'content', 'category', 'county', 'institution', 
-                  'source', 'featured_image', 'video_url', 'is_published', 
-                  'created_at', 'updated_at']
-
-class MediaSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Media
-        fields = ['id', 'institution', 'media_type', 'file', 'video_url', 
-                  'title', 'caption', 'is_cover', 'order', 'uploaded_at']
+                  'source', 'source_url', 'source_domain', 
+                  'featured_image', 'featured_image_url', 'video_url', 
+                  'is_published', 'is_expired', 'expires_at', 'created_at', 'updated_at']
+    
+    def get_is_expired(self, obj):
+        return obj.is_expired()
+    
+    def get_source_domain(self, obj):
+        if obj.source:
+            try:
+                domain = urlparse(obj.source).netloc
+                return domain.replace('www.', '')
+            except:
+                return None
+        return None
+    
+    def get_featured_image_url(self, obj):
+        return get_full_image_url(obj.featured_image.url if obj.featured_image else None)
 
 class CommentSerializer(serializers.ModelSerializer):
     user_username = serializers.CharField(source='user.username', read_only=True)
@@ -72,27 +137,3 @@ class RatingSerializer(serializers.ModelSerializer):
         model = Rating
         fields = ['id', 'user', 'user_username', 'institution', 'rating', 'review', 'created_at', 'updated_at']
         read_only_fields = ['user', 'created_at', 'updated_at']
-        
-        
-class NewsSerializer(serializers.ModelSerializer):
-    is_expired = serializers.SerializerMethodField()
-    source_domain = serializers.SerializerMethodField()
-    
-    class Meta:
-        model = News
-        fields = ['id', 'title', 'content', 'category', 'county', 'institution', 
-                  'source', 'source_url', 'source_domain', 'featured_image', 'video_url', 
-                  'is_published', 'is_expired', 'expires_at', 'created_at', 'updated_at']
-    
-    def get_is_expired(self, obj):
-        return obj.is_expired()
-    
-    def get_source_domain(self, obj):
-        if obj.source:
-            try:
-                from urllib.parse import urlparse
-                domain = urlparse(obj.source).netloc
-                return domain.replace('www.', '')
-            except:
-                return None
-        return None
