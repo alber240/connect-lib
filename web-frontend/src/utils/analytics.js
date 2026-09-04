@@ -1,29 +1,24 @@
-import ReactGA from 'react-ga4';
-
 const GA_MEASUREMENT_ID = 'G-QJ31TL72VW';
 
-// Initialize GA
-export const initGA = () => {
-    ReactGA.initialize(GA_MEASUREMENT_ID);
-};
-
-// Track page views
+// Track page views using gtag
 export const trackPageView = (path, title) => {
-    ReactGA.send({ 
-        hitType: "pageview", 
-        page: path,
-        title: title || document.title
-    });
+    if (typeof window !== 'undefined' && window.gtag) {
+        window.gtag('config', GA_MEASUREMENT_ID, {
+            page_path: path,
+            page_title: title || document.title
+        });
+    }
 };
 
-// Track custom events
+// Track custom events using gtag
 export const trackEvent = (category, action, label = null, value = null) => {
-    ReactGA.event({
-        category: category,
-        action: action,
-        label: label,
-        value: value
-    });
+    if (typeof window !== 'undefined' && window.gtag) {
+        window.gtag('event', action, {
+            event_category: category,
+            event_label: label,
+            value: value
+        });
+    }
 };
 
 // Track institution views
@@ -38,7 +33,6 @@ export const trackSearch = (query, resultsCount) => {
 
 // Track favorites
 export const trackFavorite = (institutionName, action) => {
-    // action should be 'Add' or 'Remove'
     trackEvent('Favorite', action, institutionName);
 };
 
@@ -50,11 +44,6 @@ export const trackRating = (institutionName, rating) => {
 // Track suggestions
 export const trackSuggestion = (institutionName, suggestionType) => {
     trackEvent('Suggestion', 'Submit', `${suggestionType}: ${institutionName}`);
-};
-
-// Track user actions
-export const trackUserAction = (action, label = null) => {
-    trackEvent('User', action, label);
 };
 
 // Track login
@@ -73,7 +62,6 @@ export const trackLogout = (username) => {
 };
 
 export default {
-    initGA,
     trackPageView,
     trackEvent,
     trackInstitutionView,
@@ -81,7 +69,6 @@ export default {
     trackFavorite,
     trackRating,
     trackSuggestion,
-    trackUserAction,
     trackLogin,
     trackRegister,
     trackLogout
