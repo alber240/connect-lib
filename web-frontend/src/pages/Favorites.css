@@ -1,0 +1,183 @@
+.favorites-page {
+    min-height: 100vh;
+    padding: 30px 20px;
+    background: #f5f7fa;
+}
+
+.favorites-container {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.favorites-header {
+    margin-bottom: 30px;
+}
+
+.favorites-header .back-link {
+    display: inline-block;
+    margin-bottom: 10px;
+    color: #2e86c1;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.favorites-header .back-link:hover {
+    text-decoration: underline;
+}
+
+.favorites-header h1 {
+    font-size: 2rem;
+    color: #1a2634;
+    margin-bottom: 4px;
+}
+
+.favorites-header p {
+    color: #666;
+}
+
+.favorites-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.favorite-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.favorite-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+.favorite-image {
+    height: 140px;
+    overflow: hidden;
+    background: #f0f0f0;
+}
+
+.favorite-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.favorite-body {
+    padding: 14px 16px;
+}
+
+.favorite-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    margin-bottom: 4px;
+}
+
+.favorite-header h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0;
+    color: #1a2634;
+    flex: 1;
+}
+
+.verified-badge {
+    font-size: 0.9rem;
+}
+
+.favorite-category {
+    font-size: 0.8rem;
+    color: #2e86c1;
+    margin-bottom: 4px;
+}
+
+.favorite-county {
+    font-size: 0.8rem;
+    color: #666;
+    margin-bottom: 4px;
+}
+
+.favorite-rating {
+    font-size: 0.8rem;
+    color: #888;
+}
+
+.no-favorites {
+    text-align: center;
+    padding: 60px 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.no-favorites-icon {
+    font-size: 4rem;
+    margin-bottom: 15px;
+}
+
+.no-favorites h3 {
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.no-favorites p {
+    color: #888;
+    margin-bottom: 20px;
+}
+
+.btn-primary {
+    display: inline-block;
+    padding: 10px 24px;
+    background: #1a5276;
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: background 0.3s;
+}
+
+.btn-primary:hover {
+    background: #154360;
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    margin: 30px auto;
+    border: 4px solid #e0e0e0;
+    border-top: 4px solid #1a5276;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.error-message {
+    color: #e74c3c;
+    text-align: center;
+    padding: 20px;
+}
+
+.btn-retry {
+    padding: 8px 20px;
+    background: #1a5276;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+@media (max-width: 768px) {
+    .favorites-grid {
+        grid-template-columns: 1fr;
+    }
+}

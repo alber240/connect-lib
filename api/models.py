@@ -2,6 +2,7 @@
 from django.utils import timezone
 from django.contrib.auth.models import User
 
+
 class County(models.Model):
     """The 15 counties of Liberia"""
     name = models.CharField(max_length=100, unique=True)
@@ -36,45 +37,45 @@ class Institution(models.Model):
         ('park', 'Park'),
     ]
     
-    # Media Fields
+    # ========== MEDIA FIELDS ==========
     cover_image = models.ImageField(upload_to='institutions/covers/', blank=True, null=True)
     video_url = models.URLField(blank=True, null=True, help_text="YouTube or Vimeo embed URL")
     
-    # Basic Information
+    # ========== BASIC INFORMATION ==========
     name = models.CharField(max_length=255)
     category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
     county = models.ForeignKey(County, on_delete=models.CASCADE, related_name='institutions')
     district = models.CharField(max_length=255, blank=True, null=True)
     
-    # Contact Information
+    # ========== CONTACT INFORMATION ==========
     address = models.TextField(blank=True, null=True)
     phone = models.CharField(max_length=50, blank=True, null=True)
     phone2 = models.CharField(max_length=50, blank=True, null=True)
     email = models.EmailField(blank=True, null=True)
     website = models.URLField(blank=True, null=True)
     
-    # Details
+    # ========== DETAILS ==========
     description = models.TextField(blank=True, null=True)
     services = models.TextField(blank=True, null=True, help_text="List of services offered")
     opening_hours = models.CharField(max_length=255, blank=True, null=True)
     
-    # Location (for maps)
+    # ========== LOCATION (FOR MAPS) ==========
     latitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True)
     longitude = models.DecimalField(max_digits=10, decimal_places=7, null=True, blank=True)
     google_maps_link = models.URLField(blank=True, null=True)
     
-    # Verification & Source
+    # ========== VERIFICATION & SOURCE ==========
     is_verified = models.BooleanField(default=False)
     is_featured = models.BooleanField(default=False)
     source = models.URLField(blank=True, null=True, help_text="Where this info was obtained")
     source_notes = models.TextField(blank=True, null=True)
     
-    # Engagement Fields
+    # ========== ENGAGEMENT FIELDS ==========
     likes = models.IntegerField(default=0)
     average_rating = models.FloatField(default=0)
     total_ratings = models.IntegerField(default=0)
     
-    # Timestamps
+    # ========== TIMESTAMPS ==========
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -106,19 +107,22 @@ class Suggestion(models.Model):
         ('duplicate', 'Duplicate Entry'),
     ]
     
+    # ========== SUGGESTION DETAILS ==========
     institution_name = models.CharField(max_length=255, help_text="Name of the institution")
     suggestion_type = models.CharField(max_length=20, choices=TYPE_CHOICES)
     current_info = models.TextField(blank=True, null=True, help_text="What's currently shown (for updates)")
     new_info = models.TextField(help_text="What should be added/changed")
     
-    # Contact info of suggester
+    # ========== SUGGESTER CONTACT ==========
     suggester_name = models.CharField(max_length=255, blank=True, null=True)
     suggester_phone = models.CharField(max_length=50, blank=True, null=True)
     suggester_email = models.EmailField(blank=True, null=True)
     
+    # ========== ADMIN FIELDS ==========
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     admin_notes = models.TextField(blank=True, null=True)
     
+    # ========== TIMESTAMPS ==========
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -140,23 +144,26 @@ class News(models.Model):
         ('general', 'General'),
     ]
     
+    # ========== BASIC INFORMATION ==========
     title = models.CharField(max_length=255)
     content = models.TextField()
     category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
     county = models.ForeignKey(County, on_delete=models.SET_NULL, null=True, blank=True, related_name='news')
     institution = models.ForeignKey(Institution, on_delete=models.SET_NULL, null=True, blank=True, related_name='news')
     
+    # ========== SOURCE INFORMATION ==========
     source = models.URLField(blank=True, null=True)
     source_url = models.URLField(blank=True, null=True, help_text="Link to original article")
     is_published = models.BooleanField(default=True)
     
-    # Media
+    # ========== MEDIA ==========
     featured_image = models.ImageField(upload_to='news/', blank=True, null=True)
     video_url = models.URLField(blank=True, null=True)
     
-    # Expiry
+    # ========== EXPIRY ==========
     expires_at = models.DateTimeField(null=True, blank=True, help_text="When this news expires (auto-set to 48 hours)")
     
+    # ========== TIMESTAMPS ==========
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -182,19 +189,27 @@ class News(models.Model):
 
 class Media(models.Model):
     """Images and videos for institutions"""
+    
     MEDIA_TYPES = [
         ('image', 'Image'),
         ('video', 'Video'),
     ]
     
-    institution = models.ForeignKey('Institution', on_delete=models.CASCADE, related_name='media_files')
+    # ========== RELATIONSHIPS ==========
+    institution = models.ForeignKey(Institution, on_delete=models.CASCADE, related_name='media_files')
+    
+    # ========== MEDIA DETAILS ==========
     media_type = models.CharField(max_length=10, choices=MEDIA_TYPES)
     file = models.FileField(upload_to='institutions/media/', blank=True, null=True)
     video_url = models.URLField(blank=True, null=True)
     title = models.CharField(max_length=255, blank=True)
     caption = models.TextField(blank=True)
+    
+    # ========== DISPLAY SETTINGS ==========
     is_cover = models.BooleanField(default=False)
     order = models.IntegerField(default=0)
+    
+    # ========== TIMESTAMPS ==========
     uploaded_at = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
@@ -207,15 +222,21 @@ class Media(models.Model):
 
 class Like(models.Model):
     """User likes on institutions, news, etc."""
+    
     CONTENT_TYPES = [
         ('institution', 'Institution'),
         ('news', 'News'),
         ('media', 'Media'),
     ]
     
+    # ========== RELATIONSHIPS ==========
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='likes')
+    
+    # ========== CONTENT REFERENCE ==========
     content_type = models.CharField(max_length=20, choices=CONTENT_TYPES)
     content_id = models.PositiveIntegerField()
+    
+    # ========== TIMESTAMPS ==========
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -227,17 +248,25 @@ class Like(models.Model):
 
 class Comment(models.Model):
     """User comments on institutions, news, etc."""
+    
     CONTENT_TYPES = [
         ('institution', 'Institution'),
         ('news', 'News'),
         ('media', 'Media'),
     ]
     
+    # ========== RELATIONSHIPS ==========
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comments')
+    parent = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE, related_name='replies')
+    
+    # ========== CONTENT REFERENCE ==========
     content_type = models.CharField(max_length=20, choices=CONTENT_TYPES)
     content_id = models.PositiveIntegerField()
-    parent = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE, related_name='replies')
+    
+    # ========== COMMENT CONTENT ==========
     content = models.TextField()
+    
+    # ========== TIMESTAMPS ==========
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -245,12 +274,35 @@ class Comment(models.Model):
         return f"{self.user.username} on {self.content_type} {self.content_id}"
 
 
+class Favorite(models.Model):
+    """User favorite institutions"""
+    
+    # ========== RELATIONSHIPS ==========
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='favorites')
+    institution = models.ForeignKey(Institution, on_delete=models.CASCADE, related_name='favorited_by')
+    
+    # ========== TIMESTAMPS ==========
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ['user', 'institution']
+
+    def __str__(self):
+        return f"{self.user.username} favorites {self.institution.name}"
+
+
 class Rating(models.Model):
     """User ratings for institutions (1-5 stars)"""
+    
+    # ========== RELATIONSHIPS ==========
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='ratings')
-    institution = models.ForeignKey('Institution', on_delete=models.CASCADE, related_name='ratings')
+    institution = models.ForeignKey(Institution, on_delete=models.CASCADE, related_name='ratings')
+    
+    # ========== RATING DETAILS ==========
     rating = models.IntegerField(choices=[(i, i) for i in range(1, 6)])
     review = models.TextField(blank=True, null=True)
+    
+    # ========== TIMESTAMPS ==========
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -258,4 +310,4 @@ class Rating(models.Model):
         unique_together = ['user', 'institution']
 
     def __str__(self):
-        return f"{self.user.username} rated {self.institution.name} {self.rating}★"
+        return f"{self.user.username} rated {self.institution.name} {self.rating}⭐"

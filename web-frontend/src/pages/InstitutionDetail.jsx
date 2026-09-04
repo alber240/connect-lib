@@ -5,6 +5,8 @@ import ImageGallery from '../components/ImageGallery';
 import LikeButton from '../components/LikeButton';
 import Rating from '../components/Rating';
 import CommentSection from '../components/CommentSection';
+import ReviewSection from '../components/ReviewSection';
+import FavoriteButton from '../components/FavoriteButton';
 import './InstitutionDetail.css';
 
 const InstitutionDetail = () => {
@@ -16,8 +18,46 @@ const InstitutionDetail = () => {
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [galleryImages, setGalleryImages] = useState([]);
 
-  // Base URL for images from Render (local storage)
+  // Base URL for images from Render
   const IMAGE_BASE_URL = 'https://connect-lib.onrender.com';
+
+  // ==================== HELPER FUNCTIONS ====================
+
+  const getCategoryLabel = (category) => {
+    const labels = {
+      'hospital': '🏥 Hospital',
+      'school': '📚 School',
+      'government': '🏛️ Government',
+      'business': '💼 Business',
+      'bank': '🏦 Bank',
+      'hotel': '🏨 Hotel',
+      'ngo': '🤝 NGO',
+      'market': '🛒 Market',
+      'restaurant': '🍽️ Restaurant',
+      'church': '⛪ Church',
+      'other': '📌 Other'
+    };
+    return labels[category] || category;
+  };
+
+  const getCategoryEmoji = (category) => {
+    const emojis = {
+      'hospital': '🏥',
+      'school': '📚',
+      'government': '🏛️',
+      'business': '💼',
+      'bank': '🏦',
+      'hotel': '🏨',
+      'ngo': '🤝',
+      'market': '🛒',
+      'restaurant': '🍽️',
+      'church': '⛪',
+      'other': '📌'
+    };
+    return emojis[category] || '📍';
+  };
+
+  // ==================== DATA LOADING ====================
 
   const loadInstitution = useCallback(async () => {
     setLoading(true);
@@ -65,39 +105,7 @@ const InstitutionDetail = () => {
     window.scrollTo(0, 0);
   }, [loadInstitution]);
 
-  const getCategoryLabel = (category) => {
-    const labels = {
-      'hospital': '🏥 Hospital',
-      'school': '📚 School',
-      'government': '🏛️ Government',
-      'business': '💼 Business',
-      'bank': '🏦 Bank',
-      'hotel': '🏨 Hotel',
-      'ngo': '🤝 NGO',
-      'market': '🛒 Market',
-      'restaurant': '🍽️ Restaurant',
-      'church': '⛪ Church',
-      'other': '📌 Other'
-    };
-    return labels[category] || category;
-  };
-
-  const getCategoryEmoji = (category) => {
-    const emojis = {
-      'hospital': '🏥',
-      'school': '📚',
-      'government': '🏛️',
-      'business': '💼',
-      'bank': '🏦',
-      'hotel': '🏨',
-      'ngo': '🤝',
-      'market': '🛒',
-      'restaurant': '🍽️',
-      'church': '⛪',
-      'other': '📌'
-    };
-    return emojis[category] || '📍';
-  };
+  // ==================== RENDER FUNCTIONS ====================
 
   if (loading) {
     return (
@@ -119,10 +127,12 @@ const InstitutionDetail = () => {
 
   return (
     <div className="detail-page">
+      {/* Back Button */}
       <button onClick={() => navigate(-1)} className="back-button-top">
         ← Back
       </button>
 
+      {/* Cover Image / Gallery */}
       <div className="detail-cover">
         {galleryImages.length > 0 ? (
           <ImageGallery 
@@ -140,7 +150,9 @@ const InstitutionDetail = () => {
         )}
       </div>
 
+      {/* Main Content */}
       <div className="detail-content">
+        {/* Title & Meta */}
         <h1 className="detail-title">{institution.name}</h1>
         
         <div className="detail-meta">
@@ -151,6 +163,7 @@ const InstitutionDetail = () => {
           )}
         </div>
 
+        {/* Trust Section */}
         <div className="detail-section trust-section">
           <h3>🔒 About This Data</h3>
           <div className="trust-info">
@@ -180,6 +193,7 @@ const InstitutionDetail = () => {
           </div>
         </div>
 
+        {/* Video Section */}
         {institution.video_url && (
           <div className="detail-video">
             <h3>🎬 Video</h3>
@@ -195,6 +209,16 @@ const InstitutionDetail = () => {
           </div>
         )}
 
+        {/* Favorite Button */}
+        <div className="detail-section">
+          <FavoriteButton 
+            institutionId={institution.id}
+            initialFavorited={institution.is_favorited || false}
+            initialCount={0}
+          />
+        </div>
+
+        {/* Description */}
         {institution.description && (
           <div className="detail-section">
             <h3>📖 About</h3>
@@ -215,6 +239,7 @@ const InstitutionDetail = () => {
           </div>
         )}
 
+        {/* Services */}
         {institution.services && (
           <div className="detail-section">
             <h3>🛠️ Services</h3>
@@ -226,6 +251,7 @@ const InstitutionDetail = () => {
           </div>
         )}
 
+        {/* Contact Information */}
         <div className="detail-section contact-section">
           <h3>📞 Contact Information</h3>
           <div className="contact-grid">
@@ -270,6 +296,12 @@ const InstitutionDetail = () => {
           </div>
         </div>
 
+        {/* Reviews & Ratings Section */}
+        <div className="detail-section">
+          <ReviewSection institutionId={institution.id} />
+        </div>
+
+        {/* Rating Component */}
         <div className="detail-section engagement-section">
           <div className="engagement-header">
             <h3>❤️ Rate & Review</h3>
@@ -282,6 +314,7 @@ const InstitutionDetail = () => {
           </div>
         </div>
 
+        {/* Like Button */}
         <div className="detail-section engagement-section">
           <div className="engagement-header">
             <LikeButton 
@@ -293,10 +326,12 @@ const InstitutionDetail = () => {
           </div>
         </div>
 
+        {/* Comments Section */}
         <div className="detail-section">
           <CommentSection type="institution" id={institution.id} />
         </div>
 
+        {/* Map Location */}
         {(institution.latitude && institution.longitude) && (
           <div className="detail-section">
             <h3>🗺️ Location</h3>
@@ -320,6 +355,7 @@ const InstitutionDetail = () => {
           </div>
         )}
 
+        {/* Source Attribution */}
         {institution.source && (
           <div className="detail-section source-section">
             <p className="source-text">
@@ -328,6 +364,7 @@ const InstitutionDetail = () => {
           </div>
         )}
 
+        {/* Action Buttons */}
         <div className="detail-actions">
           <Link to="/" className="action-button">🔍 Search More</Link>
           <Link to="/suggest" className="action-button secondary">💡 Suggest Update</Link>

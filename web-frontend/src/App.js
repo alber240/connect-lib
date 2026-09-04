@@ -11,6 +11,10 @@ import NewsPage from './pages/NewsPage';
 import SearchPage from './pages/SearchPage';
 import WelcomeSection from './components/WelcomeSection';
 import DidYouKnow from './components/DidYouKnow';
+import Favorites from './pages/Favorites';
+
+// Base URL for images from Render
+const IMAGE_BASE_URL = 'https://connect-lib.onrender.com';
 
 function HomePage() {
   const { user, logout } = useUserAuth();
@@ -47,6 +51,17 @@ function HomePage() {
       'other': '📌 Other'
     };
     return labels[category] || category;
+  };
+
+  const getCategoryEmoji = (category) => {
+    const emojis = {
+      'announcement': '📢',
+      'update': '📝',
+      'event': '🎉',
+      'alert': '⚠️',
+      'general': '📰'
+    };
+    return emojis[category] || '📰';
   };
 
   const loadData = useCallback(async () => {
@@ -111,6 +126,13 @@ function HomePage() {
     }
   };
 
+  const saveSearch = (term) => {
+    if (!term) return;
+    const searches = JSON.parse(localStorage.getItem('recentSearches') || '[]');
+    const updated = [term, ...searches.filter(s => s !== term)].slice(0, 5);
+    localStorage.setItem('recentSearches', JSON.stringify(updated));
+  };
+
   useEffect(() => {
     loadData();
     loadFeatured();
@@ -121,29 +143,9 @@ function HomePage() {
     loadNews();
   }, []);
 
-  const getCategoryEmoji = (category) => {
-    const emojis = {
-      'announcement': '📢',
-      'update': '📝',
-      'event': '🎉',
-      'alert': '⚠️',
-      'general': '📰'
-    };
-    return emojis[category] || '📰';
-  };
-
-  // Base URL for images from Render
-  const IMAGE_BASE_URL = 'https://connect-lib.onrender.com';
-
-  const saveSearch = (term) => {
-    if (!term) return;
-    const searches = JSON.parse(localStorage.getItem('recentSearches') || '[]');
-    const updated = [term, ...searches.filter(s => s !== term)].slice(0, 5);
-    localStorage.setItem('recentSearches', JSON.stringify(updated));
-  };
-
   return (
     <>
+      {/* Header */}
       <header className="header">
         <div className="header-top">
           <h1>🇱🇷 Connect Liberia</h1>
@@ -151,6 +153,7 @@ function HomePage() {
             {user ? (
               <>
                 <span className="user-greeting">👋 {user.username}</span>
+                <Link to="/favorites" className="header-link">❤️ Favorites</Link>
                 <button onClick={logout} className="logout-btn">Logout</button>
               </>
             ) : (
@@ -165,9 +168,11 @@ function HomePage() {
         <p className="institution-count">{institutions.length} institutions found</p>
       </header>
 
+      {/* Welcome and Did You Know Sections */}
       <WelcomeSection />
       <DidYouKnow />
 
+      {/* Featured Institutions */}
       <div className="featured-section">
         <div className="section-header">
           <h2>⭐ Featured Institutions</h2>
@@ -206,6 +211,7 @@ function HomePage() {
         </div>
       </div>
 
+      {/* Trending Institutions */}
       <div className="trending-section">
         <div className="section-header">
           <h2>🔥 Trending Now</h2>
@@ -229,6 +235,7 @@ function HomePage() {
         </div>
       </div>
 
+      {/* News Section */}
       <div className="news-section">
         <div className="news-header">
           <h2>📰 Latest News & Updates</h2>
@@ -267,6 +274,7 @@ function HomePage() {
         )}
       </div>
 
+      {/* Search and Filters */}
       <div className="search-section">
         <div className="search-bar">
           <input
@@ -316,6 +324,7 @@ function HomePage() {
         </div>
       </div>
 
+      {/* Results Grid */}
       <div className="results">
         {error && (
           <div className="error-message">
@@ -365,6 +374,7 @@ function HomePage() {
         )}
       </div>
 
+      {/* Footer */}
       <footer className="footer">
         <p>🇱🇷 Connect Liberia - Making information accessible to all Liberians</p>
         <div className="footer-links">
@@ -376,6 +386,27 @@ function HomePage() {
         </div>
       </footer>
     </>
+  );
+}
+
+function AboutPage() {
+  return (
+    <div className="about-page">
+      <div className="about-container">
+        <h1>🇱🇷 About Connect Liberia</h1>
+        <p>Connect Liberia is a platform designed to make information about institutions, organizations, and services across Liberia easily accessible to everyone.</p>
+        <h2>🎯 Our Mission</h2>
+        <p>To bridge the information gap by providing a centralized, user-friendly directory of institutions in Liberia.</p>
+        <h2>🌍 What We Offer</h2>
+        <ul>
+          <li>🏛️ Comprehensive directory of institutions</li>
+          <li>📍 Location-based search</li>
+          <li>📰 Latest news and updates</li>
+          <li>💡 Community-powered suggestions</li>
+        </ul>
+        <Link to="/" className="btn-primary">Start Exploring</Link>
+      </div>
+    </div>
   );
 }
 
@@ -392,24 +423,8 @@ function App() {
             <Route path="/suggest" element={<Suggest />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/about" element={
-              <div className="about-page">
-                <div className="about-container">
-                  <h1>🇱🇷 About Connect Liberia</h1>
-                  <p>Connect Liberia is a platform designed to make information about institutions, organizations, and services across Liberia easily accessible to everyone.</p>
-                  <h2>🎯 Our Mission</h2>
-                  <p>To bridge the information gap by providing a centralized, user-friendly directory of institutions in Liberia.</p>
-                  <h2>🌍 What We Offer</h2>
-                  <ul>
-                    <li>🏛️ Comprehensive directory of institutions</li>
-                    <li>📍 Location-based search</li>
-                    <li>📰 Latest news and updates</li>
-                    <li>💡 Community-powered suggestions</li>
-                  </ul>
-                  <Link to="/" className="btn-primary">Start Exploring</Link>
-                </div>
-              </div>
-            } />
+            <Route path="/favorites" element={<Favorites />} />
+            <Route path="/about" element={<AboutPage />} />
           </Routes>
         </div>
       </Router>
