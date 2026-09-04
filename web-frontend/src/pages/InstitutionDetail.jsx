@@ -7,6 +7,7 @@ import Rating from '../components/Rating';
 import CommentSection from '../components/CommentSection';
 import ReviewSection from '../components/ReviewSection';
 import FavoriteButton from '../components/FavoriteButton';
+import getImageUrl from '../utils/imageHelpers';
 import './InstitutionDetail.css';
 
 const InstitutionDetail = () => {
@@ -18,7 +19,7 @@ const InstitutionDetail = () => {
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [galleryImages, setGalleryImages] = useState([]);
 
-  // Base URL for images from Render
+  // Base URL for images from Render (local storage)
   const IMAGE_BASE_URL = 'https://connect-lib.onrender.com';
 
   // ==================== HELPER FUNCTIONS ====================
@@ -66,24 +67,21 @@ const InstitutionDetail = () => {
       const data = await getInstitution(id);
       if (data) {
         setInstitution(data);
-        // Build gallery from cover image and any additional images
+        // Build gallery from cover image and any additional images using the helper
         const images = [];
         if (data.cover_image) {
-          // Check if it's a full URL or relative path
-          if (data.cover_image.startsWith('http')) {
-            images.push(data.cover_image);
-          } else {
-            images.push(`${IMAGE_BASE_URL}${data.cover_image}`);
+          const imageUrl = getImageUrl(data.cover_image);
+          if (imageUrl) {
+            images.push(imageUrl);
           }
         }
         // Add any additional images if available
         if (data.media_files) {
           data.media_files.forEach(media => {
             if (media.media_type === 'image' && media.file) {
-              if (media.file.startsWith('http')) {
-                images.push(media.file);
-              } else {
-                images.push(`${IMAGE_BASE_URL}${media.file}`);
+              const imageUrl = getImageUrl(media.file);
+              if (imageUrl) {
+                images.push(imageUrl);
               }
             }
           });

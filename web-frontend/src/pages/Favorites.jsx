@@ -1,24 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useUserAuth } from '../context/UserAuthContext';
+import getImageUrl from '../utils/imageHelpers';
 import './Favorites.css';
 
 const Favorites = () => {
-    const { user } = useUserAuth();
+    const { user, isAuthenticated } = useUserAuth();
     const [favorites, setFavorites] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        if (user) {
+        // Check authentication using both context and localStorage
+        const token = localStorage.getItem('access_token');
+        if (isAuthenticated || token) {
             loadFavorites();
         } else {
             setLoading(false);
+            setError('Please login to view your favorites');
         }
-    }, [user]);
+    }, [user, isAuthenticated]);
 
     const loadFavorites = async () => {
         setLoading(true);
+        setError(null);
         try {
             const token = localStorage.getItem('access_token');
             if (!token) {
@@ -37,6 +42,16 @@ const Favorites = () => {
                 }
             );
 
+            if (response.status === 401) {
+                // Token expired
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('refresh_token');
+                localStorage.removeItem('user');
+                setError('Session expired. Please login again.');
+                setLoading(false);
+                return;
+            }
+
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
@@ -44,16 +59,16 @@ const Favorites = () => {
             const data = await response.json();
             
             // Ensure data is always an array
+            let favoritesArray = [];
             if (Array.isArray(data)) {
-                setFavorites(data);
+                favoritesArray = data;
             } else if (data && typeof data === 'object' && Array.isArray(data.results)) {
-                setFavorites(data.results);
+                favoritesArray = data.results;
             } else if (data && typeof data === 'object') {
-                // If it's a single object, wrap it
-                setFavorites([data]);
-            } else {
-                setFavorites([]);
+                favoritesArray = [data];
             }
+            
+            setFavorites(favoritesArray);
         } catch (err) {
             console.error('Error loading favorites:', err);
             setError('Failed to load favorites. Please try again.');
@@ -79,12 +94,19 @@ const Favorites = () => {
         return labels[category] || category;
     };
 
-    if (!user) {
+    // Check if user is authenticated
+    const token = localStorage.getItem('access_token');
+    const isLoggedIn = token !== null;
+
+    if (!isLoggedIn) {
         return (
             <div className="favorites-page">
                 <div className="favorites-container">
                     <h1>❤️ Favorites</h1>
-                    <p>Please <Link to="/login">login</Link> to view your favorites.</p>
+                    <div className="login-prompt">
+                        <p>🔒 Please login to view your favorites</p>
+                        <Link to="/login" className="btn-login">Login</Link>
+                    </div>
                 </div>
             </div>
         );
@@ -112,19 +134,16 @@ const Favorites = () => {
         );
     }
 
-    // Safe check - favorites must be an array
-    const favoritesList = Array.isArray(favorites) ? favorites : [];
-
     return (
         <div className="favorites-page">
             <div className="favorites-container">
                 <div className="favorites-header">
                     <Link to="/" className="back-link">← Back to Home</Link>
                     <h1>❤️ Your Favorites</h1>
-                    <p>{favoritesList.length} saved institutions</p>
+                    <p>{favorites.length} saved institutions</p>
                 </div>
 
-                {favoritesList.length === 0 ? (
+                {favorites.length === 0 ? (
                     <div className="no-favorites">
                         <div className="no-favorites-icon">💔</div>
                         <h3>No favorites yet</h3>
@@ -133,15 +152,16 @@ const Favorites = () => {
                     </div>
                 ) : (
                     <div className="favorites-grid">
-                        {favoritesList.map(inst => (
+                        {favorites.map(inst => (
                             <Link to={`/institution/${inst.id}`} key={inst.id} className="favorite-card">
                                 {inst.cover_image && (
                                     <div className="favorite-image">
                                         <img 
-                                            src={inst.cover_image.startsWith('http') ? inst.cover_image : `https://connect-lib.onrender.com${inst.cover_image}`} 
+                                            src={getImageUrl(inst.cover_image)}
                                             alt={inst.name}
                                             onError={(e) => {
                                                 e.target.style.display = 'none';
+                                                e.target.parentElement.innerHTML = '<div class="no-image-placeholder">🏛️</div>';
                                             }}
                                         />
                                     </div>
