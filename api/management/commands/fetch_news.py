@@ -1,7 +1,7 @@
 ﻿import feedparser
 import os
 import requests
-from .models import News
+from api.models import News
 
 # News sources
 NEWS_SOURCES = [
