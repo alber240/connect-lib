@@ -139,26 +139,30 @@ else:
     MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # ============= EMAIL CONFIGURATION =============
-# Using SendGrid for email (free tier: 100 emails/day)
-# Or use console for development
+# Force SendGrid as the email backend
+# This ensures emails are sent through SendGrid, not console
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# Get API key from environment
+SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY', '')
 
-# Use SendGrid if API key is available, otherwise console
-if os.environ.get('SENDGRID_API_KEY'):
+# Check if API key exists and is valid
+if SENDGRID_API_KEY and len(SENDGRID_API_KEY) > 10:
+    # Use SendGrid backend
     EMAIL_BACKEND = 'sendgrid_backend.SendgridBackend'
-    SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY')
     SENDGRID_SANDBOX_MODE_IN_DEBUG = False
+    print(f"✅ Using SendGrid email backend with API key: {SENDGRID_API_KEY[:10]}...")
 else:
+    # Fallback to console if no API key (for development)
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    print("⚠️ No SENDGRID_API_KEY found - using console backend (emails will appear in logs)")
 
 # Email settings
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'Connect Liberia <noreply@connect-lib.onrender.com>')
-EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.sendgrid.net')
-EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
-EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'apikey')
-EMAIL_HOST_PASSWORD = os.environ.get('SENDGRID_API_KEY', '')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'Connect Liberia <bigchicha74@gmail.com>')
+EMAIL_HOST = 'smtp.sendgrid.net'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'apikey'
+EMAIL_HOST_PASSWORD = SENDGRID_API_KEY
 
 # Email templates configuration
 EMAIL_TEMPLATES = {
@@ -252,7 +256,6 @@ if not DEBUG:
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = 'DENY'
 
-# ============= LOGGING =============
 # ============= LOGGING =============
 # Create logs directory if it doesn't exist
 LOGS_DIR = os.path.join(BASE_DIR, 'logs')
