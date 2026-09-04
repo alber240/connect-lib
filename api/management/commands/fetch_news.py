@@ -19,7 +19,7 @@ class Command(BaseCommand):
     help = 'Fetch and summarize news from RSS feeds using AI'
 
     def handle(self, *args, **options):
-        """Main command handler"""
+        """Main command handler - DO NOT RETURN ANYTHING"""
         self.stdout.write('🔄 Starting AI News Aggregation...')
         self.stdout.write('=' * 50)
         
@@ -76,7 +76,7 @@ class Command(BaseCommand):
         
         self.stdout.write('=' * 50)
         self.stdout.write(f'✅ Added {new_articles} new articles')
-        return new_articles
+        # DO NOT RETURN ANYTHING - Django BaseCommand expects None
 
     def summarize_article(self, content):
         """Summarize article using OpenRouter AI"""
