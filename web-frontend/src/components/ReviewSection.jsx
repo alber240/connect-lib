@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useUserAuth } from '../context/UserAuthContext';
+import { useToast } from '../context/ToastContext';
 import StarRating from './StarRating';
 import './ReviewSection.css';
 
 const ReviewSection = ({ institutionId }) => {
     const { user } = useUserAuth();
+    const { showToast } = useToast();
     const [ratings, setRatings] = useState([]);
     const [averageRating, setAverageRating] = useState(0);
     const [totalRatings, setTotalRatings] = useState(0);
@@ -35,6 +37,7 @@ const ReviewSection = ({ institutionId }) => {
             }
         } catch (error) {
             console.error('Error loading ratings:', error);
+            showToast('Failed to load reviews', 'error');
         } finally {
             setLoading(false);
         }
@@ -42,12 +45,12 @@ const ReviewSection = ({ institutionId }) => {
 
     const submitRating = async () => {
         if (!user) {
-            alert('Please login to rate this institution');
+            showToast('Please login to rate this institution', 'warning');
             return;
         }
 
         if (selectedRating === 0) {
-            alert('Please select a rating');
+            showToast('Please select a rating', 'warning');
             return;
         }
 
@@ -68,17 +71,22 @@ const ReviewSection = ({ institutionId }) => {
                     }),
                 }
             );
+
+            if (!response.ok) {
+                throw new Error('Failed to submit rating');
+            }
+
             const data = await response.json();
             if (data.average_rating !== undefined) {
                 setAverageRating(data.average_rating);
                 setTotalRatings(data.total_ratings);
                 setUserRating(selectedRating);
-                alert('✅ Rating submitted successfully!');
+                showToast('✅ Rating submitted successfully!', 'success');
                 await loadRatings();
             }
         } catch (error) {
             console.error('Error submitting rating:', error);
-            alert('❌ Error submitting rating. Please try again.');
+            showToast('❌ Error submitting rating. Please try again.', 'error');
         } finally {
             setSubmitting(false);
         }
@@ -128,7 +136,7 @@ const ReviewSection = ({ institutionId }) => {
                 </div>
             ) : (
                 <div className="login-to-review">
-                    <p><a href="/login">Login</a> to rate and review this institution</p>
+                    <p><Link to="/login">Login</Link> to rate and review this institution</p>
                 </div>
             )}
 

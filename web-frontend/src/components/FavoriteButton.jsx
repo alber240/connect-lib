@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
 import { useUserAuth } from '../context/UserAuthContext';
+import { useToast } from '../context/ToastContext';
 import './FavoriteButton.css';
 
 const FavoriteButton = ({ institutionId, initialFavorited = false, initialCount = 0 }) => {
     const { user } = useUserAuth();
+    const { showToast } = useToast();
     const [favorited, setFavorited] = useState(initialFavorited);
     const [count, setCount] = useState(initialCount);
     const [loading, setLoading] = useState(false);
 
     const toggleFavorite = async () => {
         if (!user) {
-            alert('Please login to save favorites');
+            showToast('Please login to save favorites', 'warning');
             return;
         }
 
@@ -29,12 +31,23 @@ const FavoriteButton = ({ institutionId, initialFavorited = false, initialCount 
                     }),
                 }
             );
+
+            if (!response.ok) {
+                throw new Error('Failed to toggle favorite');
+            }
+
             const data = await response.json();
             setFavorited(data.favorited);
             setCount(data.total_favorites || count);
+
+            if (data.favorited) {
+                showToast('❤️ Added to favorites!', 'success');
+            } else {
+                showToast('Removed from favorites', 'info');
+            }
         } catch (error) {
             console.error('Error toggling favorite:', error);
-            alert('❌ Error. Please try again.');
+            showToast('❌ Error toggling favorite. Please try again.', 'error');
         } finally {
             setLoading(false);
         }

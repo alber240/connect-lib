@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useUserAuth } from '../context/UserAuthContext';
+import { useToast } from '../context/ToastContext';
 import getImageUrl from '../utils/imageHelpers';
 import './Favorites.css';
 
 const Favorites = () => {
     const { user, isAuthenticated } = useUserAuth();
+    const { showToast } = useToast();
     const [favorites, setFavorites] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -48,6 +50,7 @@ const Favorites = () => {
                 localStorage.removeItem('refresh_token');
                 localStorage.removeItem('user');
                 setError('Session expired. Please login again.');
+                showToast('Session expired. Please login again.', 'error');
                 setLoading(false);
                 return;
             }
@@ -69,9 +72,13 @@ const Favorites = () => {
             }
             
             setFavorites(favoritesArray);
+            if (favoritesArray.length > 0) {
+                showToast(`📚 Loaded ${favoritesArray.length} favorites`, 'info', 2000);
+            }
         } catch (err) {
             console.error('Error loading favorites:', err);
             setError('Failed to load favorites. Please try again.');
+            showToast('Failed to load favorites. Please try again.', 'error');
         } finally {
             setLoading(false);
         }
