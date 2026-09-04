@@ -20,16 +20,40 @@ const Favorites = () => {
     const loadFavorites = async () => {
         setLoading(true);
         try {
+            const token = localStorage.getItem('access_token');
+            if (!token) {
+                setError('Please login to view favorites');
+                setLoading(false);
+                return;
+            }
+
             const response = await fetch(
                 'https://connect-lib.onrender.com/api/favorites/',
                 {
                     headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
                     },
                 }
             );
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
             const data = await response.json();
-            setFavorites(data || []);
+            
+            // Ensure data is always an array
+            if (Array.isArray(data)) {
+                setFavorites(data);
+            } else if (data && typeof data === 'object' && Array.isArray(data.results)) {
+                setFavorites(data.results);
+            } else if (data && typeof data === 'object') {
+                // If it's a single object, wrap it
+                setFavorites([data]);
+            } else {
+                setFavorites([]);
+            }
         } catch (err) {
             console.error('Error loading favorites:', err);
             setError('Failed to load favorites. Please try again.');
@@ -88,16 +112,19 @@ const Favorites = () => {
         );
     }
 
+    // Safe check - favorites must be an array
+    const favoritesList = Array.isArray(favorites) ? favorites : [];
+
     return (
         <div className="favorites-page">
             <div className="favorites-container">
                 <div className="favorites-header">
                     <Link to="/" className="back-link">← Back to Home</Link>
                     <h1>❤️ Your Favorites</h1>
-                    <p>{favorites.length} saved institutions</p>
+                    <p>{favoritesList.length} saved institutions</p>
                 </div>
 
-                {favorites.length === 0 ? (
+                {favoritesList.length === 0 ? (
                     <div className="no-favorites">
                         <div className="no-favorites-icon">💔</div>
                         <h3>No favorites yet</h3>
@@ -106,11 +133,17 @@ const Favorites = () => {
                     </div>
                 ) : (
                     <div className="favorites-grid">
-                        {favorites.map(inst => (
+                        {favoritesList.map(inst => (
                             <Link to={`/institution/${inst.id}`} key={inst.id} className="favorite-card">
                                 {inst.cover_image && (
                                     <div className="favorite-image">
-                                        <img src={inst.cover_image} alt={inst.name} />
+                                        <img 
+                                            src={inst.cover_image.startsWith('http') ? inst.cover_image : `https://connect-lib.onrender.com${inst.cover_image}`} 
+                                            alt={inst.name}
+                                            onError={(e) => {
+                                                e.target.style.display = 'none';
+                                            }}
+                                        />
                                     </div>
                                 )}
                                 <div className="favorite-body">
