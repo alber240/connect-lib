@@ -81,7 +81,9 @@ const Login = () => {
                         Don't have an account? <Link to="/register">Register here</Link>
                     </p>
                     <p className="auth-forgot">
-                        <Link to="/reset-password" className="forgot-password">🔑 Forgot Password?</Link>
+                        <Link to="/reset-password" className="forgot-password">
+                            🔑 Forgot Password?
+                        </Link>
                     </p>
                 </div>
             </div>

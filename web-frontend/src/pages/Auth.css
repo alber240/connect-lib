@@ -301,3 +301,26 @@
 .forgot-password:hover {
     text-decoration: underline;
 }
+
+/* Auth Links */
+.auth-links {
+    margin-top: 16px;
+}
+
+.auth-forgot {
+    text-align: center;
+    margin-top: 8px;
+}
+
+.forgot-password {
+    color: var(--primary);
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: var(--transition);
+}
+
+.forgot-password:hover {
+    text-decoration: underline;
+    color: var(--primary-dark);
+}
