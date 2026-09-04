@@ -290,3 +290,14 @@
         font-size: 0.9rem;
     }
 }
+
+/* Add to Auth.css */
+.forgot-password {
+    color: var(--primary);
+    text-decoration: none;
+    font-size: 0.85rem;
+}
+
+.forgot-password:hover {
+    text-decoration: underline;
+}

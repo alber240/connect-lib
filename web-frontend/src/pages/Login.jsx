@@ -40,7 +40,6 @@ const Login = () => {
     return (
         <div className="auth-page">
             <div className="auth-container">
-                {/* Back to Home Button */}
                 <div className="auth-back">
                     <Link to="/" className="back-home-link">← Back to Home</Link>
                 </div>
@@ -77,9 +76,14 @@ const Login = () => {
                     </button>
                 </form>
 
-                <p className="auth-switch">
-                    Don't have an account? <Link to="/register">Register here</Link>
-                </p>
+                <div className="auth-links">
+                    <p className="auth-switch">
+                        Don't have an account? <Link to="/register">Register here</Link>
+                    </p>
+                    <p className="auth-forgot">
+                        <Link to="/reset-password" className="forgot-password">🔑 Forgot Password?</Link>
+                    </p>
+                </div>
             </div>
         </div>
     );
