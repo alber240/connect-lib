@@ -3,6 +3,7 @@ import { useUserAuth } from '../context/UserAuthContext';
 import { useToast } from '../context/ToastContext';
 import StarRating from './StarRating';
 import './ReviewSection.css';
+import { Link } from 'react-router-dom';
 
 const ReviewSection = ({ institutionId }) => {
     const { user } = useUserAuth();
