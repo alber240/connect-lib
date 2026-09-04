@@ -94,6 +94,10 @@ def dashboard_suggestions(request):
     serializer = SuggestionSerializer(suggestions, many=True)
     return Response(serializer.data)
 
+ # api/dashboard_views.py - Update suggestion_action
+
+from .services.email_service import EmailService
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def dashboard_suggestion_action(request, pk):
@@ -101,27 +105,48 @@ def dashboard_suggestion_action(request, pk):
     try:
         suggestion = Suggestion.objects.get(pk=pk)
     except Suggestion.DoesNotExist:
-        return Response({'error': 'Suggestion not found'}, status=status.HTTP_404_NOT_FOUND)
-    
+        return Response(
+            {'error': 'Suggestion not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
     action = request.data.get('action')
-    notes = request.data.get('notes', '')
-    
+    admin_notes = request.data.get('admin_notes', '')
+
+    if action not in ['approve', 'reject']:
+        return Response(
+            {'error': 'Invalid action'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
     if action == 'approve':
         suggestion.status = 'approved'
         # Create institution from suggestion
-        Institution.objects.create(
-            name=suggestion.institution_name,
-            description=suggestion.new_info,
-            source_notes=f"Created from user suggestion #{suggestion.id}"
-        )
-    elif action == 'reject':
-        suggestion.status = 'rejected'
+        county = County.objects.filter(name__icontains=suggestion.county).first()
+        if county:
+            Institution.objects.create(
+                name=suggestion.institution_name,
+                category=suggestion.category or 'other',
+                county=county,
+                description=suggestion.new_info,
+                is_verified=False,
+            )
     else:
-        return Response({'error': 'Invalid action'}, status=status.HTTP_400_BAD_REQUEST)
-    
-    suggestion.admin_notes = notes
+        suggestion.status = 'rejected'
+
+    suggestion.admin_notes = admin_notes
     suggestion.save()
-    return Response({'message': f'Suggestion {action}d successfully'})
+
+    # Send email notification
+    if suggestion.suggester_email:
+        user = User.objects.filter(email=suggestion.suggester_email).first()
+        if user:
+            EmailService.send_suggestion_status(user, suggestion)
+
+    return Response({
+        'message': f'Suggestion {action}d successfully',
+        'status': suggestion.status
+    })
 
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
