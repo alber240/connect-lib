@@ -3,6 +3,7 @@ from rest_framework.routers import DefaultRouter
 from . import views
 from . import dashboard_views
 from . import engagement_views
+from . import password_reset_views
 
 # ==================== ROUTER REGISTRATION ====================
 router = DefaultRouter()
@@ -54,4 +55,8 @@ urlpatterns = [
     # Favorites
     path('favorites/', engagement_views.get_favorites, name='get_favorites'),
     path('favorites/toggle/', engagement_views.toggle_favorite, name='toggle_favorite'),
+    
+    # Password Reset
+    path('password-reset/request/', password_reset_views.request_password_reset, name='password_reset_request'),
+    path('password-reset/confirm/', password_reset_views.confirm_password_reset, name='password_reset_confirm'),
 ]
