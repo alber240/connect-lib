@@ -1,7 +1,6 @@
 import axios from 'axios';
 
 // Use environment variable or fallback to production URL
-// Force the correct API URL for Render
 const API_BASE_URL = 'https://connect-lib.onrender.com/api';
 
 const api = axios.create({
@@ -32,15 +31,21 @@ api.interceptors.response.use(
       originalRequest._retry = true;
       try {
         const refreshToken = localStorage.getItem('refresh_token');
-        const response = await axios.post(`${API_BASE_URL}/token/refresh/`, {
-          refresh: refreshToken,
-        });
-        localStorage.setItem('access_token', response.data.access);
-        originalRequest.headers.Authorization = `Bearer ${response.data.access}`;
-        return api(originalRequest);
+        if (refreshToken) {
+          const response = await axios.post(`${API_BASE_URL}/token/refresh/`, {
+            refresh: refreshToken,
+          });
+          if (response.data.access) {
+            localStorage.setItem('access_token', response.data.access);
+            originalRequest.headers.Authorization = `Bearer ${response.data.access}`;
+            return api(originalRequest);
+          }
+        }
       } catch (e) {
+        // Refresh failed - clear tokens and redirect to login
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
+        localStorage.removeItem('user');
         window.location.href = '/login';
         return Promise.reject(e);
       }
@@ -71,6 +76,7 @@ export const login = async (username, password) => {
 export const logout = () => {
   localStorage.removeItem('access_token');
   localStorage.removeItem('refresh_token');
+  localStorage.removeItem('user');
 };
 
 export const isAuthenticated = () => {
@@ -148,7 +154,7 @@ export const getLatestNews = async (limit = 4) => {
   }
 };
 
-// ============ USER AUTHENTICATION ============
+// ============ USER AUTHENTICATION (Consistent token keys) ============
 export const register = async (username, email, password, password2) => {
   try {
     const response = await api.post('/register/', {
@@ -170,29 +176,95 @@ export const userLogin = async (username, password) => {
       password,
     });
     if (response.data.access) {
-      localStorage.setItem('user_token', response.data.access);
-      localStorage.setItem('user_refresh', response.data.refresh);
-      localStorage.setItem('user_username', username);
+      // Use consistent token keys: access_token and refresh_token
+      localStorage.setItem('access_token', response.data.access);
+      localStorage.setItem('refresh_token', response.data.refresh);
+      
+      // Store user info
+      const userData = { username, isAuthenticated: true };
+      localStorage.setItem('user', JSON.stringify(userData));
+      
       return response.data;
     }
     throw new Error('No access token received');
   } catch (error) {
+    console.error('Login error:', error.response?.data || error.message);
     throw error.response?.data || { error: 'Login failed' };
   }
 };
 
 export const userLogout = () => {
-  localStorage.removeItem('user_token');
-  localStorage.removeItem('user_refresh');
-  localStorage.removeItem('user_username');
+  localStorage.removeItem('access_token');
+  localStorage.removeItem('refresh_token');
+  localStorage.removeItem('user');
 };
 
 export const isUserLoggedIn = () => {
-  return !!localStorage.getItem('user_token');
+  return !!localStorage.getItem('access_token');
 };
 
 export const getCurrentUser = () => {
-  return localStorage.getItem('user_username');
+  const userStr = localStorage.getItem('user');
+  if (userStr) {
+    try {
+      const user = JSON.parse(userStr);
+      return user.username || null;
+    } catch {
+      return null;
+    }
+  }
+  return null;
+};
+
+// ============ FAVORITES ============
+export const getFavorites = async () => {
+  try {
+    const response = await api.get('/favorites/');
+    if (response.data && response.data.results) {
+      return response.data.results;
+    }
+    return response.data || [];
+  } catch (error) {
+    console.error('Error fetching favorites:', error);
+    throw error;
+  }
+};
+
+export const toggleFavorite = async (institutionId) => {
+  try {
+    const response = await api.post('/favorites/toggle/', {
+      institution: institutionId,
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error toggling favorite:', error);
+    throw error;
+  }
+};
+
+// ============ RATINGS ============
+export const submitRating = async (institutionId, rating, review) => {
+  try {
+    const response = await api.post('/rating/', {
+      institution: institutionId,
+      rating,
+      review,
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error submitting rating:', error);
+    throw error;
+  }
+};
+
+export const getInstitutionRatings = async (institutionId) => {
+  try {
+    const response = await api.get(`/rating/${institutionId}/`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching ratings:', error);
+    throw error;
+  }
 };
 
 // ============ SUGGESTIONS ============
